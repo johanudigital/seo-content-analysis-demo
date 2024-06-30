@@ -117,7 +117,7 @@ const SEOContentOutlineTool = () => {
 
   return (
     <div className="container">
-      <h1>SEO Content Outline Tool</h1>
+      <h1>UDigital SEO Checker</h1>
       <div className="tabs">
         <button onClick={() => setActiveTab('content')} className={activeTab === 'content' ? 'active' : ''}>Content</button>
         <button onClick={() => setActiveTab('meta')} className={activeTab === 'meta' ? 'active' : ''}>Meta Description</button>
