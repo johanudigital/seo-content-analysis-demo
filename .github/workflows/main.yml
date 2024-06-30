@@ -30,4 +30,3 @@ jobs:
         run: |
           npm install -g gh-pages
           npm run deploy
-
