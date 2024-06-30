@@ -119,3 +119,5 @@ const SEOContentOutlineTool = () => {
     </div>
   );
 };
+
+export default SEOContentOutlineTool;
