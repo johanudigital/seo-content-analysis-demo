@@ -22,9 +22,12 @@ jobs:
         run: npm install
 
       - name: Build project
-        run: npm run build
+        run: |
+          export NODE_OPTIONS=--openssl-legacy-provider
+          npm run build
 
       - name: Deploy to GitHub Pages
         run: |
           npm install -g gh-pages
           npm run deploy
+
