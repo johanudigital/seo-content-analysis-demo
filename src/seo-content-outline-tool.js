@@ -5,12 +5,21 @@ const SEOContentOutlineTool = () => {
   const [keyword, setKeyword] = useState('');
   const [seoScore, setSeoScore] = useState(0);
   const [feedback, setFeedback] = useState([]);
+  const [metaDescription, setMetaDescription] = useState('');
+  const [metaFeedback, setMetaFeedback] = useState([]);
+  const [activeTab, setActiveTab] = useState('content');
 
   useEffect(() => {
     if (content && keyword) {
       analyzeSEO();
     }
   }, [content, keyword]);
+
+  useEffect(() => {
+    if (metaDescription) {
+      analyzeMetaDescription();
+    }
+  }, [metaDescription]);
 
   const analyzeSEO = () => {
     let score = 0;
@@ -82,40 +91,89 @@ const SEOContentOutlineTool = () => {
     setFeedback(feedbackItems);
   };
 
+  const analyzeMetaDescription = () => {
+    let feedbackItems = [];
+
+    // Check meta description length
+    const length = metaDescription.length;
+    if (length >= 50 && length <= 160) {
+      feedbackItems.push("✅ Good meta description length (50-160 characters)");
+    } else if (length < 50) {
+      feedbackItems.push("❌ Meta description is too short. Aim for 50-160 characters");
+    } else {
+      feedbackItems.push("❌ Meta description is too long. Aim for 50-160 characters");
+    }
+
+    // Check keyword presence in meta description
+    if (metaDescription.toLowerCase().includes(keyword.toLowerCase())) {
+      feedbackItems.push("✅ Keyword present in meta description");
+    } else {
+      feedbackItems.push("❌ Include the keyword in the meta description");
+    }
+
+    // Update state
+    setMetaFeedback(feedbackItems);
+  };
+
   return (
-    <div className="p-4 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">SEO Content Outline Tool</h1>
-      <div className="mb-4">
-        <input
-          type="text"
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
-          placeholder="Enter target keyword"
-          className="w-full p-2 border rounded"
-        />
+    <div className="container">
+      <h1>SEO Content Outline Tool</h1>
+      <div className="tabs">
+        <button onClick={() => setActiveTab('content')} className={activeTab === 'content' ? 'active' : ''}>Content</button>
+        <button onClick={() => setActiveTab('meta')} className={activeTab === 'meta' ? 'active' : ''}>Meta Description</button>
       </div>
-      <div className="mb-4">
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="Enter your content here..."
-          className="w-full h-64 p-2 border rounded"
-        />
-      </div>
-      <div className="mb-4">
-        <h2 className="text-xl font-bold">SEO Score: {seoScore}/100</h2>
-        <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mt-2">
-          <div className="bg-blue-600 h-2.5 rounded-full" style={{width: `${seoScore}%`}}></div>
-        </div>
-      </div>
-      <div>
-        <h3 className="text-lg font-bold mb-2">SEO Feedback:</h3>
-        <ul className="list-disc pl-5">
-          {feedback.map((item, index) => (
-            <li key={index}>{item}</li>
-          ))}
-        </ul>
-      </div>
+      {activeTab === 'content' && (
+        <>
+          <div className="mb-4">
+            <input
+              type="text"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              placeholder="Enter target keyword"
+            />
+          </div>
+          <div className="mb-4">
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Enter your content here..."
+            />
+          </div>
+          <div className="seo-score">
+            <h2>SEO Score: {seoScore}/100</h2>
+            <div className="progress-bar">
+              <div className="progress-bar-inner" style={{ width: `${seoScore}%` }}></div>
+            </div>
+          </div>
+          <div>
+            <h3>SEO Feedback:</h3>
+            <ul className="feedback">
+              {feedback.map((item, index) => (
+                <li key={index}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        </>
+      )}
+      {activeTab === 'meta' && (
+        <>
+          <div className="mb-4">
+            <textarea
+              value={metaDescription}
+              onChange={(e) => setMetaDescription(e.target.value)}
+              placeholder="Enter meta description here..."
+            />
+          </div>
+          <div>
+            <h3>Meta Description Feedback:</h3>
+            <ul className="feedback">
+              {metaFeedback.map((item, index) => (
+                <li key={index}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        </>
+      )}
     </div>
   );
 };
