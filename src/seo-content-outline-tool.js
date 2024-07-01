@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { debounce } from 'lodash';
+import logo from './assets/u_digital_logo.jpeg'; // Adjust the path based on your project structure
 
 const SEOContentOutlineTool = () => {
   const [content, setContent] = useState('');
@@ -222,6 +223,12 @@ const SEOContentOutlineTool = () => {
     }
   }, [categoryContent, keyword, analyzeCategoryContent, activeTab]);
 
+  const getProgressBarColor = (score) => {
+    if (score < 40) return 'red';
+    if (score < 70) return 'orange';
+    return 'green';
+  };
+
   const FeedbackItem = ({ item }) => (
     <li className={`feedback-item ${item.type}`}>
       {item.type === 'success' && '✅ '}
@@ -233,7 +240,10 @@ const SEOContentOutlineTool = () => {
 
   return (
     <div className="container">
-      <h1>UDigital SEO Tool</h1>
+      <header style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
+        <img src={logo} alt="Logo" style={{ height: '50px', marginRight: '20px' }} />
+        <h1>UDigital SEO Tool</h1>
+      </header>
       <div className="tabs">
         <button
           onClick={() => setActiveTab('blogPost')}
@@ -282,7 +292,7 @@ const SEOContentOutlineTool = () => {
             <div className="progress-bar">
               <div
                 className="progress-bar-inner"
-                style={{ width: `${seoScore}%` }}
+                style={{ width: `${seoScore}%`, backgroundColor: getProgressBarColor(seoScore) }}
               ></div>
             </div>
           </div>
@@ -360,7 +370,7 @@ const SEOContentOutlineTool = () => {
             <div className="progress-bar">
               <div
                 className="progress-bar-inner"
-                style={{ width: `${seoScore}%` }}
+                style={{ width: `${seoScore}%`, backgroundColor: getProgressBarColor(seoScore) }}
               ></div>
             </div>
           </div>
@@ -396,7 +406,7 @@ const SEOContentOutlineTool = () => {
             <div className="progress-bar">
               <div
                 className="progress-bar-inner"
-                style={{ width: `${seoScore}%` }}
+                style={{ width: `${seoScore}%`, backgroundColor: getProgressBarColor(seoScore) }}
               ></div>
             </div>
           </div>
