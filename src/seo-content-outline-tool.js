@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { debounce } from 'lodash';
-import logo from './assets/u_digital_logo.jpeg'; // Adjust the path based on your project structure
+import logo from './assets/logo.jpeg'; // Adjust the path based on your project structure
 
 const SEOContentOutlineTool = () => {
   const [content, setContent] = useState('');
