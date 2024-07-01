@@ -10,7 +10,9 @@ const SEOContentOutlineTool = () => {
   const [metaDescription, setMetaDescription] = useState('');
   const [metaTitleFeedback, setMetaTitleFeedback] = useState([]);
   const [metaDescriptionFeedback, setMetaDescriptionFeedback] = useState([]);
-  const [activeTab, setActiveTab] = useState('content');
+  const [activeTab, setActiveTab] = useState('blogPost');
+  const [productDescription, setProductDescription] = useState('');
+  const [categoryContent, setCategoryContent] = useState('');
 
   const analyzeSEO = useCallback(debounce(() => {
     let score = 0;
@@ -144,17 +146,81 @@ const SEOContentOutlineTool = () => {
     setMetaDescriptionFeedback(descriptionFeedbackItems);
   }, 500), [metaTitle, metaDescription, keyword]);
 
-  useEffect(() => {
-    if (content && keyword) {
-      analyzeSEO();
+  const analyzeProductDescription = useCallback(debounce(() => {
+    let score = 0;
+    let feedbackItems = [];
+
+    // Product description length check
+    const wordCount = productDescription.split(/\s+/).length;
+    if (wordCount >= 100) {
+      score += 20;
+      feedbackItems.push({ type: 'success', message: "Good product description length (100+ words)" });
+    } else {
+      feedbackItems.push({ type: 'error', message: "Product description is too short. Aim for 100+ words" });
     }
-  }, [content, keyword, analyzeSEO]);
+
+    // Keyword presence in product description
+    if (productDescription.toLowerCase().includes(keyword.toLowerCase())) {
+      score += 20;
+      feedbackItems.push({ type: 'success', message: "Keyword present in product description" });
+    } else {
+      feedbackItems.push({ type: 'error', message: "Include the keyword in the product description" });
+    }
+
+    // Update state
+    setSeoScore(score);
+    setFeedback(feedbackItems);
+  }, 500), [productDescription, keyword]);
+
+  const analyzeCategoryContent = useCallback(debounce(() => {
+    let score = 0;
+    let feedbackItems = [];
+
+    // Category page content length check
+    const wordCount = categoryContent.split(/\s+/).length;
+    if (wordCount >= 200) {
+      score += 20;
+      feedbackItems.push({ type: 'success', message: "Good category page content length (200+ words)" });
+    } else {
+      feedbackItems.push({ type: 'error', message: "Category page content is too short. Aim for 200+ words" });
+    }
+
+    // Keyword presence in category content
+    if (categoryContent.toLowerCase().includes(keyword.toLowerCase())) {
+      score += 20;
+      feedbackItems.push({ type: 'success', message: "Keyword present in category content" });
+    } else {
+      feedbackItems.push({ type: 'error', message: "Include the keyword in the category content" });
+    }
+
+    // Update state
+    setSeoScore(score);
+    setFeedback(feedbackItems);
+  }, 500), [categoryContent, keyword]);
 
   useEffect(() => {
-    if (metaTitle || metaDescription) {
+    if (content && keyword && activeTab === 'blogPost') {
+      analyzeSEO();
+    }
+  }, [content, keyword, analyzeSEO, activeTab]);
+
+  useEffect(() => {
+    if ((metaTitle || metaDescription) && activeTab === 'metaContent') {
       analyzeMeta();
     }
-  }, [metaTitle, metaDescription, analyzeMeta]);
+  }, [metaTitle, metaDescription, analyzeMeta, activeTab]);
+
+  useEffect(() => {
+    if (productDescription && keyword && activeTab === 'productDescriptions') {
+      analyzeProductDescription();
+    }
+  }, [productDescription, keyword, analyzeProductDescription, activeTab]);
+
+  useEffect(() => {
+    if (categoryContent && keyword && activeTab === 'categoryPage') {
+      analyzeCategoryContent();
+    }
+  }, [categoryContent, keyword, analyzeCategoryContent, activeTab]);
 
   const FeedbackItem = ({ item }) => (
     <li className={`feedback-item ${item.type}`}>
@@ -170,19 +236,31 @@ const SEOContentOutlineTool = () => {
       <h1>UDigital SEO Tool</h1>
       <div className="tabs">
         <button
-          onClick={() => setActiveTab('content')}
-          className={`tab ${activeTab === 'content' ? 'active' : ''}`}
+          onClick={() => setActiveTab('blogPost')}
+          className={`tab ${activeTab === 'blogPost' ? 'active' : ''}`}
         >
-          Content
+          Blog Post
         </button>
         <button
-          onClick={() => setActiveTab('meta')}
-          className={`tab ${activeTab === 'meta' ? 'active' : ''}`}
+          onClick={() => setActiveTab('metaContent')}
+          className={`tab ${activeTab === 'metaContent' ? 'active' : ''}`}
         >
-          Meta
+          Meta Content
+        </button>
+        <button
+          onClick={() => setActiveTab('productDescriptions')}
+          className={`tab ${activeTab === 'productDescriptions' ? 'active' : ''}`}
+        >
+          Product Descriptions
+        </button>
+        <button
+          onClick={() => setActiveTab('categoryPage')}
+          className={`tab ${activeTab === 'categoryPage' ? 'active' : ''}`}
+        >
+          Category Page
         </button>
       </div>
-      {activeTab === 'content' && (
+      {activeTab === 'blogPost' && (
         <>
           <div className="input-group">
             <input
@@ -218,7 +296,7 @@ const SEOContentOutlineTool = () => {
           </div>
         </>
       )}
-      {activeTab === 'meta' && (
+      {activeTab === 'metaContent' && (
         <>
           <div className="input-group">
             <input
@@ -257,6 +335,78 @@ const SEOContentOutlineTool = () => {
                 </ul>
               </>
             )}
+          </div>
+        </>
+      )}
+      {activeTab === 'productDescriptions' && (
+        <>
+          <div className="input-group">
+            <input
+              type="text"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              placeholder="Enter target keyword"
+            />
+          </div>
+          <div className="input-group">
+            <textarea
+              value={productDescription}
+              onChange={(e) => setProductDescription(e.target.value)}
+              placeholder="Enter product description here..."
+            />
+          </div>
+          <div className="seo-score">
+            <h2>SEO Score: {seoScore}/100</h2>
+            <div className="progress-bar">
+              <div
+                className="progress-bar-inner"
+                style={{ width: `${seoScore}%` }}
+              ></div>
+            </div>
+          </div>
+          <div>
+            <h3>SEO Feedback:</h3>
+            <ul className="feedback">
+              {feedback.map((item, index) => (
+                <FeedbackItem key={index} item={item} />
+              ))}
+            </ul>
+          </div>
+        </>
+      )}
+      {activeTab === 'categoryPage' && (
+        <>
+          <div className="input-group">
+            <input
+              type="text"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              placeholder="Enter target keyword"
+            />
+          </div>
+          <div className="input-group">
+            <textarea
+              value={categoryContent}
+              onChange={(e) => setCategoryContent(e.target.value)}
+              placeholder="Enter category page content here..."
+            />
+          </div>
+          <div className="seo-score">
+            <h2>SEO Score: {seoScore}/100</h2>
+            <div className="progress-bar">
+              <div
+                className="progress-bar-inner"
+                style={{ width: `${seoScore}%` }}
+              ></div>
+            </div>
+          </div>
+          <div>
+            <h3>SEO Feedback:</h3>
+            <ul className="feedback">
+              {feedback.map((item, index) => (
+                <FeedbackItem key={index} item={item} />
+              ))}
+            </ul>
           </div>
         </>
       )}
