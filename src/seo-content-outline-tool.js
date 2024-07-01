@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { debounce } from 'lodash';
-import logo from './assets/logo.jpeg'; // Adjust the path based on your project structure
+import logo from './assets/logo.jpeg';
 
 const SEOContentOutlineTool = () => {
   const [content, setContent] = useState('');
@@ -15,29 +15,28 @@ const SEOContentOutlineTool = () => {
   const [productDescription, setProductDescription] = useState('');
   const [categoryContent, setCategoryContent] = useState('');
 
-  const analyzeSEO = useCallback(debounce(() => {
+  const analyzeContent = useCallback((text, type) => {
     let score = 0;
     let feedbackItems = [];
 
-    // Content length check
-    const wordCount = content.split(/\s+/).length;
-    if (wordCount >= 300) {
+    const wordCount = text.split(/\s+/).filter(Boolean).length;
+    const minWordCount = type === 'blogPost' ? 300 : type === 'productDescription' ? 100 : 200;
+
+    if (wordCount >= minWordCount) {
       score += 20;
-      feedbackItems.push({ type: 'success', message: "Good content length (300+ words)" });
+      feedbackItems.push({ type: 'success', message: `Good ${type} length (${minWordCount}+ words)` });
     } else {
-      feedbackItems.push({ type: 'error', message: "Content is too short. Aim for 300+ words" });
+      feedbackItems.push({ type: 'error', message: `${type.charAt(0).toUpperCase() + type.slice(1)} is too short. Aim for ${minWordCount}+ words` });
     }
 
-    // Keyword presence in introduction
-    if (content.slice(0, 100).toLowerCase().includes(keyword.toLowerCase())) {
+    if (text.slice(0, 100).toLowerCase().includes(keyword.toLowerCase())) {
       score += 15;
       feedbackItems.push({ type: 'success', message: "Keyword present in the introduction" });
     } else {
       feedbackItems.push({ type: 'error', message: "Include the keyword in the first 100 characters" });
     }
 
-    // Keyword density
-    const keywordCount = (content.toLowerCase().match(new RegExp(keyword.toLowerCase(), "g")) || []).length;
+    const keywordCount = (text.toLowerCase().match(new RegExp(keyword.toLowerCase(), "g")) || []).length;
     const keywordDensity = (keywordCount / wordCount) * 100;
     if (keywordDensity >= 0.5 && keywordDensity <= 2.5) {
       score += 15;
@@ -48,56 +47,53 @@ const SEOContentOutlineTool = () => {
       feedbackItems.push({ type: 'warning', message: "Increase keyword usage slightly" });
     }
 
-    // Headings check
-    const headingsRegex = /^#+\s.+$/gm;
-    const headingsCount = (content.match(headingsRegex) || []).length;
-    if (headingsCount > 0) {
-      score += 10;
-      feedbackItems.push({ type: 'success', message: `${headingsCount} heading(s) detected` });
-    } else {
-      feedbackItems.push({ type: 'error', message: "Add headings (use # for h1, ## for h2, etc.)" });
+    if (type === 'blogPost') {
+      const headingsCount = (text.match(/^#+\s.+$/gm) || []).length;
+      if (headingsCount > 0) {
+        score += 10;
+        feedbackItems.push({ type: 'success', message: `${headingsCount} heading(s) detected` });
+      } else {
+        feedbackItems.push({ type: 'error', message: "Add headings (use # for h1, ## for h2, etc.)" });
+      }
+
+      const linksCount = (text.match(/\[([^\]]+)\]\(([^)]+)\)/g) || []).length;
+      if (linksCount > 0) {
+        score += 10;
+        feedbackItems.push({ type: 'success', message: `${linksCount} link(s) detected` });
+      } else {
+        feedbackItems.push({ type: 'error', message: "Add internal or external links" });
+      }
+
+      const listsCount = (text.match(/^(-|\d+\.)\s.+$/gm) || []).length;
+      if (listsCount > 0) {
+        score += 10;
+        feedbackItems.push({ type: 'success', message: `${listsCount} list item(s) detected` });
+      } else {
+        feedbackItems.push({ type: 'warning', message: "Consider adding bullet points or numbered lists" });
+      }
+
+      const imagesCount = (text.match(/!\[([^\]]*)\]\(([^)]+)\)/g) || []).length;
+      if (imagesCount > 0) {
+        score += 10;
+        feedbackItems.push({ type: 'success', message: `${imagesCount} image(s) with alt text detected` });
+      } else {
+        feedbackItems.push({ type: 'warning', message: "Add images with descriptive alt text" });
+      }
     }
 
-    // Links check
-    const linksRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
-    const linksCount = (content.match(linksRegex) || []).length;
-    if (linksCount > 0) {
-      score += 10;
-      feedbackItems.push({ type: 'success', message: `${linksCount} link(s) detected` });
-    } else {
-      feedbackItems.push({ type: 'error', message: "Add internal or external links" });
-    }
+    return { score, feedbackItems };
+  }, [keyword]);
 
-    // Lists check
-    const listsRegex = /^(-|\d+\.)\s.+$/gm;
-    const listsCount = (content.match(listsRegex) || []).length;
-    if (listsCount > 0) {
-      score += 10;
-      feedbackItems.push({ type: 'success', message: `${listsCount} list item(s) detected` });
-    } else {
-      feedbackItems.push({ type: 'warning', message: "Consider adding bullet points or numbered lists" });
-    }
-
-    // Image alt text check
-    const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
-    const imagesCount = (content.match(imageRegex) || []).length;
-    if (imagesCount > 0) {
-      score += 10;
-      feedbackItems.push({ type: 'success', message: `${imagesCount} image(s) with alt text detected` });
-    } else {
-      feedbackItems.push({ type: 'warning', message: "Add images with descriptive alt text" });
-    }
-
-    // Update state
+  const analyzeSEO = useCallback(debounce(() => {
+    const { score, feedbackItems } = analyzeContent(content, 'blogPost');
     setSeoScore(score);
     setFeedback(feedbackItems);
-  }, 500), [content, keyword]);
+  }, 500), [content, analyzeContent]);
 
   const analyzeMeta = useCallback(debounce(() => {
     let titleFeedbackItems = [];
     let descriptionFeedbackItems = [];
 
-    // Meta title checks
     const titleLength = metaTitle.length;
     if (titleLength >= 50 && titleLength <= 60) {
       titleFeedbackItems.push({ type: 'success', message: "Good meta title length (50-60 characters)" });
@@ -120,7 +116,6 @@ const SEOContentOutlineTool = () => {
       titleFeedbackItems.push({ type: 'warning', message: "Consider adding a Call-to-Action keyword in the meta title" });
     }
 
-    // Meta description checks
     const descriptionLength = metaDescription.length;
     if (descriptionLength >= 50 && descriptionLength <= 160) {
       descriptionFeedbackItems.push({ type: 'success', message: "Good meta description length (50-160 characters)" });
@@ -142,101 +137,175 @@ const SEOContentOutlineTool = () => {
       descriptionFeedbackItems.push({ type: 'warning', message: "Consider adding a Call-to-Action in the meta description" });
     }
 
-    // Update state
     setMetaTitleFeedback(titleFeedbackItems);
     setMetaDescriptionFeedback(descriptionFeedbackItems);
   }, 500), [metaTitle, metaDescription, keyword]);
 
   const analyzeProductDescription = useCallback(debounce(() => {
-    let score = 0;
-    let feedbackItems = [];
-
-    // Product description length check
-    const wordCount = productDescription.split(/\s+/).length;
-    if (wordCount >= 100) {
-      score += 20;
-      feedbackItems.push({ type: 'success', message: "Good product description length (100+ words)" });
-    } else {
-      feedbackItems.push({ type: 'error', message: "Product description is too short. Aim for 100+ words" });
-    }
-
-    // Keyword presence in product description
-    if (productDescription.toLowerCase().includes(keyword.toLowerCase())) {
-      score += 20;
-      feedbackItems.push({ type: 'success', message: "Keyword present in product description" });
-    } else {
-      feedbackItems.push({ type: 'error', message: "Include the keyword in the product description" });
-    }
-
-    // Update state
+    const { score, feedbackItems } = analyzeContent(productDescription, 'productDescription');
     setSeoScore(score);
     setFeedback(feedbackItems);
-  }, 500), [productDescription, keyword]);
+  }, 500), [productDescription, analyzeContent]);
 
   const analyzeCategoryContent = useCallback(debounce(() => {
-    let score = 0;
-    let feedbackItems = [];
-
-    // Category page content length check
-    const wordCount = categoryContent.split(/\s+/).length;
-    if (wordCount >= 200) {
-      score += 20;
-      feedbackItems.push({ type: 'success', message: "Good category page content length (200+ words)" });
-    } else {
-      feedbackItems.push({ type: 'error', message: "Category page content is too short. Aim for 200+ words" });
-    }
-
-    // Keyword presence in category content
-    if (categoryContent.toLowerCase().includes(keyword.toLowerCase())) {
-      score += 20;
-      feedbackItems.push({ type: 'success', message: "Keyword present in category content" });
-    } else {
-      feedbackItems.push({ type: 'error', message: "Include the keyword in the category content" });
-    }
-
-    // Update state
+    const { score, feedbackItems } = analyzeContent(categoryContent, 'categoryContent');
     setSeoScore(score);
     setFeedback(feedbackItems);
-  }, 500), [categoryContent, keyword]);
+  }, 500), [categoryContent, analyzeContent]);
 
   useEffect(() => {
-    if (content && keyword && activeTab === 'blogPost') {
+    if (activeTab === 'blogPost' && content && keyword) {
       analyzeSEO();
-    }
-  }, [content, keyword, analyzeSEO, activeTab]);
-
-  useEffect(() => {
-    if ((metaTitle || metaDescription) && activeTab === 'metaContent') {
+    } else if (activeTab === 'metaContent' && (metaTitle || metaDescription)) {
       analyzeMeta();
-    }
-  }, [metaTitle, metaDescription, analyzeMeta, activeTab]);
-
-  useEffect(() => {
-    if (productDescription && keyword && activeTab === 'productDescriptions') {
+    } else if (activeTab === 'productDescriptions' && productDescription && keyword) {
       analyzeProductDescription();
-    }
-  }, [productDescription, keyword, analyzeProductDescription, activeTab]);
-
-  useEffect(() => {
-    if (categoryContent && keyword && activeTab === 'categoryPage') {
+    } else if (activeTab === 'categoryPage' && categoryContent && keyword) {
       analyzeCategoryContent();
     }
-  }, [categoryContent, keyword, analyzeCategoryContent, activeTab]);
+  }, [activeTab, content, keyword, metaTitle, metaDescription, productDescription, categoryContent, analyzeSEO, analyzeMeta, analyzeProductDescription, analyzeCategoryContent]);
 
-  const getProgressBarColor = (score) => {
+  const getProgressBarColor = useCallback((score) => {
     if (score < 40) return 'red';
     if (score < 70) return 'orange';
     return 'green';
-  };
+  }, []);
 
-  const FeedbackItem = ({ item }) => (
+  const FeedbackItem = useMemo(() => ({ item }) => (
     <li className={`feedback-item ${item.type}`}>
       {item.type === 'success' && '✅ '}
       {item.type === 'error' && '❌ '}
       {item.type === 'warning' && '⚠️ '}
       {item.message}
     </li>
-  );
+  ), []);
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'blogPost':
+        return (
+          <>
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Enter your content here..."
+            />
+            <div className="seo-score">
+              <h2>SEO Score: {seoScore}/100</h2>
+              <div className="progress-bar">
+                <div
+                  className="progress-bar-inner"
+                  style={{ width: `${seoScore}%`, backgroundColor: getProgressBarColor(seoScore) }}
+                ></div>
+              </div>
+            </div>
+            <div>
+              <h3>SEO Feedback:</h3>
+              <ul className="feedback">
+                {feedback.map((item, index) => (
+                  <FeedbackItem key={index} item={item} />
+                ))}
+              </ul>
+            </div>
+          </>
+        );
+      case 'metaContent':
+        return (
+          <>
+            <input
+              type="text"
+              value={metaTitle}
+              onChange={(e) => setMetaTitle(e.target.value)}
+              placeholder="Enter meta title here..."
+            />
+            <textarea
+              value={metaDescription}
+              onChange={(e) => setMetaDescription(e.target.value)}
+              placeholder="Enter meta description here..."
+            />
+            <div>
+              <h3>Meta Feedback:</h3>
+              {metaTitle && (
+                <>
+                  <h4>Meta Title Feedback:</h4>
+                  <ul className="feedback">
+                    {metaTitleFeedback.map((item, index) => (
+                      <FeedbackItem key={index} item={item} />
+                    ))}
+                  </ul>
+                </>
+              )}
+              {metaDescription && (
+                <>
+                  <h4>Meta Description Feedback:</h4>
+                  <ul className="feedback">
+                    {metaDescriptionFeedback.map((item, index) => (
+                      <FeedbackItem key={index} item={item} />
+                    ))}
+                  </ul>
+                </>
+              )}
+            </div>
+          </>
+        );
+      case 'productDescriptions':
+        return (
+          <>
+            <textarea
+              value={productDescription}
+              onChange={(e) => setProductDescription(e.target.value)}
+              placeholder="Enter product description here..."
+            />
+            <div className="seo-score">
+              <h2>SEO Score: {seoScore}/100</h2>
+              <div className="progress-bar">
+                <div
+                  className="progress-bar-inner"
+                  style={{ width: `${seoScore}%`, backgroundColor: getProgressBarColor(seoScore) }}
+                ></div>
+              </div>
+            </div>
+            <div>
+              <h3>SEO Feedback:</h3>
+              <ul className="feedback">
+                {feedback.map((item, index) => (
+                  <FeedbackItem key={index} item={item} />
+                ))}
+              </ul>
+            </div>
+          </>
+        );
+      case 'categoryPage':
+        return (
+          <>
+            <textarea
+              value={categoryContent}
+              onChange={(e) => setCategoryContent(e.target.value)}
+              placeholder="Enter category page content here..."
+            />
+            <div className="seo-score">
+              <h2>SEO Score: {seoScore}/100</h2>
+              <div className="progress-bar">
+                <div
+                  className="progress-bar-inner"
+                  style={{ width: `${seoScore}%`, backgroundColor: getProgressBarColor(seoScore) }}
+                ></div>
+              </div>
+            </div>
+            <div>
+              <h3>SEO Feedback:</h3>
+              <ul className="feedback">
+                {feedback.map((item, index) => (
+                  <FeedbackItem key={index} item={item} />
+                ))}
+              </ul>
+            </div>
+          </>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="container">
@@ -245,181 +314,25 @@ const SEOContentOutlineTool = () => {
         <h1>UDigital SEO Tool</h1>
       </header>
       <div className="tabs">
-        <button
-          onClick={() => setActiveTab('blogPost')}
-          className={`tab ${activeTab === 'blogPost' ? 'active' : ''}`}
-        >
-          Blog Post
-        </button>
-        <button
-          onClick={() => setActiveTab('metaContent')}
-          className={`tab ${activeTab === 'metaContent' ? 'active' : ''}`}
-        >
-          Meta Content
-        </button>
-        <button
-          onClick={() => setActiveTab('productDescriptions')}
-          className={`tab ${activeTab === 'productDescriptions' ? 'active' : ''}`}
-        >
-          Product Descriptions
-        </button>
-        <button
-          onClick={() => setActiveTab('categoryPage')}
-          className={`tab ${activeTab === 'categoryPage' ? 'active' : ''}`}
-        >
-          Category Page
-        </button>
+        {['blogPost', 'metaContent', 'productDescriptions', 'categoryPage'].map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`tab ${activeTab === tab ? 'active' : ''}`}
+          >
+            {tab.charAt(0).toUpperCase() + tab.slice(1).replace(/([A-Z])/g, ' $1').trim()}
+          </button>
+        ))}
       </div>
-      {activeTab === 'blogPost' && (
-        <>
-          <div className="input-group">
-            <input
-              type="text"
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-              placeholder="Enter target keyword"
-            />
-          </div>
-          <div className="input-group">
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Enter your content here..."
-            />
-          </div>
-          <div className="seo-score">
-            <h2>SEO Score: {seoScore}/100</h2>
-            <div className="progress-bar">
-              <div
-                className="progress-bar-inner"
-                style={{ width: `${seoScore}%`, backgroundColor: getProgressBarColor(seoScore) }}
-              ></div>
-            </div>
-          </div>
-          <div>
-            <h3>SEO Feedback:</h3>
-            <ul className="feedback">
-              {feedback.map((item, index) => (
-                <FeedbackItem key={index} item={item} />
-              ))}
-            </ul>
-          </div>
-        </>
-      )}
-      {activeTab === 'metaContent' && (
-        <>
-          <div className="input-group">
-            <input
-              type="text"
-              value={metaTitle}
-              onChange={(e) => setMetaTitle(e.target.value)}
-              placeholder="Enter meta title here..."
-            />
-          </div>
-          <div className="input-group">
-            <textarea
-              value={metaDescription}
-              onChange={(e) => setMetaDescription(e.target.value)}
-              placeholder="Enter meta description here..."
-            />
-          </div>
-          <div>
-            <h3>Meta Feedback:</h3>
-            {metaTitle && (
-              <>
-                <h4>Meta Title Feedback:</h4>
-                <ul className="feedback">
-                  {metaTitleFeedback.map((item, index) => (
-                    <FeedbackItem key={index} item={item} />
-                  ))}
-                </ul>
-              </>
-            )}
-            {metaDescription && (
-              <>
-                <h4>Meta Description Feedback:</h4>
-                <ul className="feedback">
-                  {metaDescriptionFeedback.map((item, index) => (
-                    <FeedbackItem key={index} item={item} />
-                  ))}
-                </ul>
-              </>
-            )}
-          </div>
-        </>
-      )}
-      {activeTab === 'productDescriptions' && (
-        <>
-          <div className="input-group">
-            <input
-              type="text"
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-              placeholder="Enter target keyword"
-            />
-          </div>
-          <div className="input-group">
-            <textarea
-              value={productDescription}
-              onChange={(e) => setProductDescription(e.target.value)}
-              placeholder="Enter product description here..."
-            />
-          </div>
-          <div className="seo-score">
-            <h2>SEO Score: {seoScore}/100</h2>
-            <div className="progress-bar">
-              <div
-                className="progress-bar-inner"
-                style={{ width: `${seoScore}%`, backgroundColor: getProgressBarColor(seoScore) }}
-              ></div>
-            </div>
-          </div>
-          <div>
-            <h3>SEO Feedback:</h3>
-            <ul className="feedback">
-              {feedback.map((item, index) => (
-                <FeedbackItem key={index} item={item} />
-              ))}
-            </ul>
-          </div>
-        </>
-      )}
-      {activeTab === 'categoryPage' && (
-        <>
-          <div className="input-group">
-            <input
-              type="text"
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-              placeholder="Enter target keyword"
-            />
-          </div>
-          <div className="input-group">
-            <textarea
-              value={categoryContent}
-              onChange={(e) => setCategoryContent(e.target.value)}
-              placeholder="Enter category page content here..."
-            />
-          </div>
-          <div className="seo-score">
-            <h2>SEO Score: {seoScore}/100</h2>
-            <div className="progress-bar">
-              <div
-                className="progress-bar-inner"
-                style={{ width: `${seoScore}%`, backgroundColor: getProgressBarColor(seoScore) }}
-              ></div>
-            </div>
-          </div>
-          <div>
-            <h3>SEO Feedback:</h3>
-            <ul className="feedback">
-              {feedback.map((item, index) => (
-                <FeedbackItem key={index} item={item} />
-              ))}
-            </ul>
-          </div>
-        </>
-      )}
+      <div className="input-group">
+        <input
+          type="text"
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+          placeholder="Enter target keyword"
+        />
+      </div>
+      {renderTabContent()}
     </div>
   );
 };
