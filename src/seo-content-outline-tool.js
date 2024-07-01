@@ -166,55 +166,51 @@ const SEOContentOutlineTool = () => {
   );
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-4">UDigital SEO Tool</h1>
-      <div className="flex mb-4">
+    <div className="container">
+      <h1>UDigital SEO Tool</h1>
+      <div className="tabs">
         <button
           onClick={() => setActiveTab('content')}
-          className={`mr-2 px-4 py-2 rounded ${activeTab === 'content' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+          className={`tab ${activeTab === 'content' ? 'active' : ''}`}
         >
           Content
         </button>
         <button
           onClick={() => setActiveTab('meta')}
-          className={`px-4 py-2 rounded ${activeTab === 'meta' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+          className={`tab ${activeTab === 'meta' ? 'active' : ''}`}
         >
           Meta
         </button>
       </div>
       {activeTab === 'content' && (
         <>
-          <div className="mb-4">
+          <div className="input-group">
             <input
               type="text"
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               placeholder="Enter target keyword"
-              className="w-full p-2 border rounded"
             />
           </div>
-          <div className="mb-4">
+          <div className="input-group">
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Enter your content here..."
-              className="w-full p-2 border rounded h-64"
             />
           </div>
-          <div className="mb-4">
-            <h2 className="text-xl font-bold">SEO Score: {seoScore}/100</h2>
-            <div className="w-full bg-gray-200 rounded">
+          <div className="seo-score">
+            <h2>SEO Score: {seoScore}/100</h2>
+            <div className="progress-bar">
               <div
-                className="bg-blue-500 text-xs leading-none py-1 text-center text-white rounded"
+                className="progress-bar-inner"
                 style={{ width: `${seoScore}%` }}
-              >
-                {seoScore}%
-              </div>
+              ></div>
             </div>
           </div>
           <div>
-            <h3 className="text-lg font-bold mb-2">SEO Feedback:</h3>
-            <ul className="space-y-2">
+            <h3>SEO Feedback:</h3>
+            <ul className="feedback">
               {feedback.map((item, index) => (
                 <FeedbackItem key={index} item={item} />
               ))}
@@ -224,29 +220,27 @@ const SEOContentOutlineTool = () => {
       )}
       {activeTab === 'meta' && (
         <>
-          <div className="mb-4">
+          <div className="input-group">
             <input
               type="text"
               value={metaTitle}
               onChange={(e) => setMetaTitle(e.target.value)}
               placeholder="Enter meta title here..."
-              className="w-full p-2 border rounded"
             />
           </div>
-          <div className="mb-4">
+          <div className="input-group">
             <textarea
               value={metaDescription}
               onChange={(e) => setMetaDescription(e.target.value)}
               placeholder="Enter meta description here..."
-              className="w-full p-2 border rounded h-32"
             />
           </div>
           <div>
-            <h3 className="text-lg font-bold mb-2">Meta Feedback:</h3>
+            <h3>Meta Feedback:</h3>
             {metaTitle && (
               <>
-                <h4 className="font-bold mt-4 mb-2">Meta Title Feedback:</h4>
-                <ul className="space-y-2">
+                <h4>Meta Title Feedback:</h4>
+                <ul className="feedback">
                   {metaTitleFeedback.map((item, index) => (
                     <FeedbackItem key={index} item={item} />
                   ))}
@@ -255,8 +249,8 @@ const SEOContentOutlineTool = () => {
             )}
             {metaDescription && (
               <>
-                <h4 className="font-bold mt-4 mb-2">Meta Description Feedback:</h4>
-                <ul className="space-y-2">
+                <h4>Meta Description Feedback:</h4>
+                <ul className="feedback">
                   {metaDescriptionFeedback.map((item, index) => (
                     <FeedbackItem key={index} item={item} />
                   ))}
