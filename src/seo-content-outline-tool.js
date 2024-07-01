@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { debounce } from 'lodash';
 
 const SEOContentOutlineTool = () => {
   const [content, setContent] = useState('');
@@ -11,193 +12,175 @@ const SEOContentOutlineTool = () => {
   const [metaDescriptionFeedback, setMetaDescriptionFeedback] = useState([]);
   const [activeTab, setActiveTab] = useState('content');
 
-  useEffect(() => {
-    if (content && keyword) {
-      analyzeSEO();
-    }
-  }, [content, keyword]);
-
-  useEffect(() => {
-    if (metaTitle || metaDescription) {
-      analyzeMeta();
-    }
-  }, [metaTitle, metaDescription]);
-
-  const analyzeSEO = () => {
+  const analyzeSEO = useCallback(debounce(() => {
     let score = 0;
     let feedbackItems = [];
 
-    // Check content length
+    // Content length check
     const wordCount = content.split(/\s+/).length;
     if (wordCount >= 300) {
       score += 20;
-      feedbackItems.push("✅ Good content length (300+ words)");
+      feedbackItems.push({ type: 'success', message: "Good content length (300+ words)" });
     } else {
-      feedbackItems.push("❌ Content is too short. Aim for 300+ words");
+      feedbackItems.push({ type: 'error', message: "Content is too short. Aim for 300+ words" });
     }
 
-    // Check keyword presence in the first 100 characters
+    // Keyword presence in introduction
     if (content.slice(0, 100).toLowerCase().includes(keyword.toLowerCase())) {
       score += 15;
-      feedbackItems.push("✅ Keyword present in the introduction");
+      feedbackItems.push({ type: 'success', message: "Keyword present in the introduction" });
     } else {
-      feedbackItems.push("❌ Include the keyword in the first 100 characters");
+      feedbackItems.push({ type: 'error', message: "Include the keyword in the first 100 characters" });
     }
 
-    // Check keyword density
+    // Keyword density
     const keywordCount = (content.toLowerCase().match(new RegExp(keyword.toLowerCase(), "g")) || []).length;
     const keywordDensity = (keywordCount / wordCount) * 100;
     if (keywordDensity >= 0.5 && keywordDensity <= 2.5) {
       score += 15;
-      feedbackItems.push("✅ Good keyword density");
+      feedbackItems.push({ type: 'success', message: "Good keyword density" });
     } else if (keywordDensity > 2.5) {
-      feedbackItems.push("❌ Keyword stuffing detected. Reduce keyword usage");
+      feedbackItems.push({ type: 'error', message: "Keyword stuffing detected. Reduce keyword usage" });
     } else {
-      feedbackItems.push("❌ Increase keyword usage slightly");
+      feedbackItems.push({ type: 'warning', message: "Increase keyword usage slightly" });
     }
 
-    // Check for headings
-    if (content.includes('#')) {
+    // Headings check
+    const headingsRegex = /^#+\s.+$/gm;
+    const headingsCount = (content.match(headingsRegex) || []).length;
+    if (headingsCount > 0) {
       score += 10;
-      feedbackItems.push("✅ Headings detected");
+      feedbackItems.push({ type: 'success', message: `${headingsCount} heading(s) detected` });
     } else {
-      feedbackItems.push("❌ Add headings (use # for h1, ## for h2, etc.)");
+      feedbackItems.push({ type: 'error', message: "Add headings (use # for h1, ## for h2, etc.)" });
     }
 
-    // Check for links
-    if (content.includes('http') || content.includes('www')) {
+    // Links check
+    const linksRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+    const linksCount = (content.match(linksRegex) || []).length;
+    if (linksCount > 0) {
       score += 10;
-      feedbackItems.push("✅ Links detected");
+      feedbackItems.push({ type: 'success', message: `${linksCount} link(s) detected` });
     } else {
-      feedbackItems.push("❌ Add internal or external links");
+      feedbackItems.push({ type: 'error', message: "Add internal or external links" });
     }
 
-    // Check for bullet points or numbered lists
-    if (content.includes('-') || content.includes('1.')) {
+    // Lists check
+    const listsRegex = /^(-|\d+\.)\s.+$/gm;
+    const listsCount = (content.match(listsRegex) || []).length;
+    if (listsCount > 0) {
       score += 10;
-      feedbackItems.push("✅ Lists detected");
+      feedbackItems.push({ type: 'success', message: `${listsCount} list item(s) detected` });
     } else {
-      feedbackItems.push("❌ Consider adding bullet points or numbered lists");
+      feedbackItems.push({ type: 'warning', message: "Consider adding bullet points or numbered lists" });
     }
 
-    // Check for image alt text (simulated)
-    if (content.includes('![') && content.includes('](')) {
+    // Image alt text check
+    const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
+    const imagesCount = (content.match(imageRegex) || []).length;
+    if (imagesCount > 0) {
       score += 10;
-      feedbackItems.push("✅ Image with alt text detected");
+      feedbackItems.push({ type: 'success', message: `${imagesCount} image(s) with alt text detected` });
     } else {
-      feedbackItems.push("❌ Add images with descriptive alt text");
+      feedbackItems.push({ type: 'warning', message: "Add images with descriptive alt text" });
     }
 
     // Update state
     setSeoScore(score);
     setFeedback(feedbackItems);
-  };
+  }, 500), [content, keyword]);
 
-  const analyzeMeta = () => {
+  const analyzeMeta = useCallback(debounce(() => {
     let titleFeedbackItems = [];
     let descriptionFeedbackItems = [];
 
-    // Check meta title length
+    // Meta title checks
     const titleLength = metaTitle.length;
     if (titleLength >= 50 && titleLength <= 60) {
-      titleFeedbackItems.push("✅ Good meta title length (50-60 characters)");
+      titleFeedbackItems.push({ type: 'success', message: "Good meta title length (50-60 characters)" });
     } else if (titleLength < 50) {
-      titleFeedbackItems.push("❌ Meta title is too short. Aim for 50-60 characters");
+      titleFeedbackItems.push({ type: 'error', message: "Meta title is too short. Aim for 50-60 characters" });
     } else {
-      titleFeedbackItems.push("❌ Meta title is too long. Aim for 50-60 characters");
+      titleFeedbackItems.push({ type: 'error', message: "Meta title is too long. Aim for 50-60 characters" });
     }
 
-    // Check keyword presence in meta title
     if (metaTitle.toLowerCase().includes(keyword.toLowerCase())) {
-      titleFeedbackItems.push("✅ Keyword present in meta title");
+      titleFeedbackItems.push({ type: 'success', message: "Keyword present in meta title" });
     } else {
-      titleFeedbackItems.push("❌ Include the keyword in the meta title");
+      titleFeedbackItems.push({ type: 'error', message: "Include the keyword in the meta title" });
     }
 
-    // Check for Call-to-Action keyword in meta title
     const ctaKeywords = ["buy", "get", "try", "find", "learn"];
     if (ctaKeywords.some(cta => metaTitle.toLowerCase().includes(cta))) {
-      titleFeedbackItems.push("✅ Call-to-Action keyword present in meta title");
+      titleFeedbackItems.push({ type: 'success', message: "Call-to-Action keyword present in meta title" });
     } else {
-      titleFeedbackItems.push("❌ Consider adding a Call-to-Action keyword in the meta title");
+      titleFeedbackItems.push({ type: 'warning', message: "Consider adding a Call-to-Action keyword in the meta title" });
     }
 
-    // Check for special characters in meta title
-    if (/[^a-zA-Z0-9\s]/.test(metaTitle)) {
-      titleFeedbackItems.push("❌ Avoid using special characters in the meta title");
-    } else {
-      titleFeedbackItems.push("✅ No special characters in meta title");
-    }
-
-    // Check for unique meta title
-    if (metaTitle.toLowerCase() !== content.toLowerCase().slice(0, 60)) {
-      titleFeedbackItems.push("✅ Unique meta title");
-    } else {
-      titleFeedbackItems.push("❌ Meta title is too similar to the content. Make it unique");
-    }
-
-    // Check meta description length
+    // Meta description checks
     const descriptionLength = metaDescription.length;
     if (descriptionLength >= 50 && descriptionLength <= 160) {
-      descriptionFeedbackItems.push("✅ Good meta description length (50-160 characters)");
+      descriptionFeedbackItems.push({ type: 'success', message: "Good meta description length (50-160 characters)" });
     } else if (descriptionLength < 50) {
-      descriptionFeedbackItems.push("❌ Meta description is too short. Aim for 50-160 characters");
+      descriptionFeedbackItems.push({ type: 'error', message: "Meta description is too short. Aim for 50-160 characters" });
     } else {
-      descriptionFeedbackItems.push("❌ Meta description is too long. Aim for 50-160 characters");
+      descriptionFeedbackItems.push({ type: 'error', message: "Meta description is too long. Aim for 50-160 characters" });
     }
 
-    // Check keyword presence in meta description
     if (metaDescription.toLowerCase().includes(keyword.toLowerCase())) {
-      descriptionFeedbackItems.push("✅ Keyword present in meta description");
+      descriptionFeedbackItems.push({ type: 'success', message: "Keyword present in meta description" });
     } else {
-      descriptionFeedbackItems.push("❌ Include the keyword in the meta description");
+      descriptionFeedbackItems.push({ type: 'error', message: "Include the keyword in the meta description" });
     }
 
-    // Check for Call-to-Action in meta description
     if (ctaKeywords.some(cta => metaDescription.toLowerCase().includes(cta))) {
-      descriptionFeedbackItems.push("✅ Call-to-Action present in meta description");
+      descriptionFeedbackItems.push({ type: 'success', message: "Call-to-Action present in meta description" });
     } else {
-      descriptionFeedbackItems.push("❌ Consider adding a Call-to-Action in the meta description");
-    }
-
-    // Check for natural language and readability in meta description
-    const readabilityScore = (metaDescription.split(' ').length / metaDescription.split('.').length) < 20;
-    if (readabilityScore) {
-      descriptionFeedbackItems.push("✅ Meta description is readable and uses natural language");
-    } else {
-      descriptionFeedbackItems.push("❌ Improve readability and use natural language in meta description");
-    }
-
-    // Check for duplicate meta description
-    // Assuming a function `isDuplicateMetaDescription` exists to check for duplicates
-    const isDuplicateMetaDescription = (description) => {
-      // Implement your logic to check for duplicate meta descriptions
-      return false;
-    };
-    if (isDuplicateMetaDescription(metaDescription)) {
-      descriptionFeedbackItems.push("❌ Duplicate meta description detected. Make it unique");
-    } else {
-      descriptionFeedbackItems.push("✅ Meta description is unique");
-    }
-
-    // Check for keyword at the beginning of meta description
-    if (metaDescription.toLowerCase().startsWith(keyword.toLowerCase())) {
-      descriptionFeedbackItems.push("✅ Keyword at the beginning of meta description");
-    } else {
-      descriptionFeedbackItems.push("❌ Consider starting the meta description with the keyword");
+      descriptionFeedbackItems.push({ type: 'warning', message: "Consider adding a Call-to-Action in the meta description" });
     }
 
     // Update state
     setMetaTitleFeedback(titleFeedbackItems);
     setMetaDescriptionFeedback(descriptionFeedbackItems);
-  };
+  }, 500), [metaTitle, metaDescription, keyword]);
+
+  useEffect(() => {
+    if (content && keyword) {
+      analyzeSEO();
+    }
+  }, [content, keyword, analyzeSEO]);
+
+  useEffect(() => {
+    if (metaTitle || metaDescription) {
+      analyzeMeta();
+    }
+  }, [metaTitle, metaDescription, analyzeMeta]);
+
+  const FeedbackItem = ({ item }) => (
+    <li className={`feedback-item ${item.type}`}>
+      {item.type === 'success' && '✅ '}
+      {item.type === 'error' && '❌ '}
+      {item.type === 'warning' && '⚠️ '}
+      {item.message}
+    </li>
+  );
 
   return (
-    <div className="container">
-      <h1>UDigital SEO tool</h1>
-      <div className="tabs">
-        <button onClick={() => setActiveTab('content')} className={activeTab === 'content' ? 'active' : ''}>Content</button>
-        <button onClick={() => setActiveTab('meta')} className={activeTab === 'meta' ? 'active' : ''}>Meta</button>
+    <div className="container mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-4">UDigital SEO Tool</h1>
+      <div className="flex mb-4">
+        <button
+          onClick={() => setActiveTab('content')}
+          className={`mr-2 px-4 py-2 rounded ${activeTab === 'content' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+        >
+          Content
+        </button>
+        <button
+          onClick={() => setActiveTab('meta')}
+          className={`px-4 py-2 rounded ${activeTab === 'meta' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+        >
+          Meta
+        </button>
       </div>
       {activeTab === 'content' && (
         <>
@@ -207,6 +190,7 @@ const SEOContentOutlineTool = () => {
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               placeholder="Enter target keyword"
+              className="w-full p-2 border rounded"
             />
           </div>
           <div className="mb-4">
@@ -214,19 +198,25 @@ const SEOContentOutlineTool = () => {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Enter your content here..."
+              className="w-full p-2 border rounded h-64"
             />
           </div>
-          <div className="seo-score">
-            <h2>SEO Score: {seoScore}/100</h2>
-            <div className="progress-bar">
-              <div className="progress-bar-inner" style={{ width: `${seoScore}%` }}></div>
+          <div className="mb-4">
+            <h2 className="text-xl font-bold">SEO Score: {seoScore}/100</h2>
+            <div className="w-full bg-gray-200 rounded">
+              <div
+                className="bg-blue-500 text-xs leading-none py-1 text-center text-white rounded"
+                style={{ width: `${seoScore}%` }}
+              >
+                {seoScore}%
+              </div>
             </div>
           </div>
           <div>
-            <h3>SEO Feedback:</h3>
-            <ul className="feedback">
+            <h3 className="text-lg font-bold mb-2">SEO Feedback:</h3>
+            <ul className="space-y-2">
               {feedback.map((item, index) => (
-                <li key={index}>{item}</li>
+                <FeedbackItem key={index} item={item} />
               ))}
             </ul>
           </div>
@@ -240,6 +230,7 @@ const SEOContentOutlineTool = () => {
               value={metaTitle}
               onChange={(e) => setMetaTitle(e.target.value)}
               placeholder="Enter meta title here..."
+              className="w-full p-2 border rounded"
             />
           </div>
           <div className="mb-4">
@@ -247,26 +238,27 @@ const SEOContentOutlineTool = () => {
               value={metaDescription}
               onChange={(e) => setMetaDescription(e.target.value)}
               placeholder="Enter meta description here..."
+              className="w-full p-2 border rounded h-32"
             />
           </div>
           <div>
-            <h3>Meta Feedback:</h3>
+            <h3 className="text-lg font-bold mb-2">Meta Feedback:</h3>
             {metaTitle && (
               <>
-                <h4>Meta Title Feedback:</h4>
-                <ul className="feedback">
+                <h4 className="font-bold mt-4 mb-2">Meta Title Feedback:</h4>
+                <ul className="space-y-2">
                   {metaTitleFeedback.map((item, index) => (
-                    <li key={index}>{item}</li>
+                    <FeedbackItem key={index} item={item} />
                   ))}
                 </ul>
               </>
             )}
             {metaDescription && (
               <>
-                <h4>Meta Description Feedback:</h4>
-                <ul className="feedback">
+                <h4 className="font-bold mt-4 mb-2">Meta Description Feedback:</h4>
+                <ul className="space-y-2">
                   {metaDescriptionFeedback.map((item, index) => (
-                    <li key={index}>{item}</li>
+                    <FeedbackItem key={index} item={item} />
                   ))}
                 </ul>
               </>
