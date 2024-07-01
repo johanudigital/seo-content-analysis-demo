@@ -19,7 +19,7 @@ body {
 h1 {
   font-size: 2.5rem;
   margin-bottom: 1rem;
-  color: #ff8c00; /* Brand orange color */
+  color: #000000; /* Black title color */
 }
 
 .tabs {
@@ -81,9 +81,9 @@ textarea {
 
 .progress-bar-inner {
   height: 12px;
-  background-color: #ff8c00; /* Brand orange color */
+  background-color: #ff8c00; /* Default color, will be dynamically changed */
   width: 0; /* Dynamically set this width with JavaScript */
-  transition: width 0.3s ease;
+  transition: width 0.3s ease, background-color 0.3s ease;
 }
 
 .feedback {
@@ -99,24 +99,4 @@ textarea {
   background-color: #f1f1f1;
   display: flex;
   align-items: center;
-}
-
-.feedback li:before {
-  content: "•";
-  display: inline-block;
-  width: 1em;
-  margin-left: -1em;
-  font-size: 1.5em;
-}
-
-.feedback-item.success:before {
-  color: green;
-}
-
-.feedback-item.error:before {
-  color: red;
-}
-
-.feedback-item.warning:before {
-  color: #ff8c00; /* Brand orange color */
 }
