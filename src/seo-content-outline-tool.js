@@ -10,7 +10,7 @@ const SEOContentOutlineTool = () => {
   const [metaDescriptionFeedback, setMetaDescriptionFeedback] = useState([]);
   const [activeTab, setActiveTab] = useState('metaContent');
 
-  const analyzeMeta = useCallback(debounce(() => {
+const analyzeMeta = useCallback(debounce(() => {
     let titleFeedbackItems = [];
     let descriptionFeedbackItems = [];
 
@@ -76,21 +76,53 @@ const SEOContentOutlineTool = () => {
     </li>
   ), []);
 
+  const getTextColor = (length, thresholds) => {
+    if (length > thresholds.red) return 'red';
+    if (length > thresholds.orange) return 'orange';
+    return 'inherit';
+  };
+
+  const GooglePreview = () => (
+    <div className="google-preview">
+      <div className="preview-title">{metaTitle || 'Enter a title to see preview'}</div>
+      <div className="preview-url">https://www.example.com › page</div>
+      <div className="preview-description">
+        {metaDescription || 'Enter a description to see preview'}
+      </div>
+    </div>
+  );
+
   const renderTabContent = () => {
     if (activeTab === 'metaContent') {
+      const metaTitleColor = getTextColor(metaTitle.length, { orange: 60, red: 80 });
+      const metaDescriptionColor = getTextColor(metaDescription.length, { orange: 160, red: 200 });
+
       return (
         <>
-          <input
-            type="text"
-            value={metaTitle}
-            onChange={(e) => setMetaTitle(e.target.value)}
-            placeholder="Enter meta title here..."
-          />
-          <textarea
-            value={metaDescription}
-            onChange={(e) => setMetaDescription(e.target.value)}
-            placeholder="Enter meta description here..."
-          />
+          <div className="input-wrapper">
+            <input
+              type="text"
+              value={metaTitle}
+              onChange={(e) => setMetaTitle(e.target.value)}
+              placeholder="Enter meta title here..."
+              style={{ color: metaTitleColor }}
+            />
+            <span className="character-count" style={{ color: metaTitleColor }}>
+              {metaTitle.length} / 60
+            </span>
+          </div>
+          <div className="input-wrapper">
+            <textarea
+              value={metaDescription}
+              onChange={(e) => setMetaDescription(e.target.value)}
+              placeholder="Enter meta description here..."
+              style={{ color: metaDescriptionColor }}
+            />
+            <span className="character-count" style={{ color: metaDescriptionColor }}>
+              {metaDescription.length} / 160
+            </span>
+          </div>
+          <GooglePreview />
           <div>
             <h3>Meta Feedback:</h3>
             {metaTitle && (
