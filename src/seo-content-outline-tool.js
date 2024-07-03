@@ -73,7 +73,7 @@ const SEOContentOutlineTool = () => {
   const analyzeUrl = async () => {
     setLoading(true);
     try {
-      const response = await fetch('https://seo-tool-backend.vercel.app', {
+      const response = await fetch('https://seo-tool-backend.vercel.app/api/analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
