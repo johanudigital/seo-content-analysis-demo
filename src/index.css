@@ -136,3 +136,20 @@ textarea {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }
+
+.input-wrapper {
+  position: relative;
+}
+
+.character-count {
+  position: absolute;
+  right: 10px;
+  bottom: 20px;
+  font-size: 0.875rem;
+  pointer-events: none;
+}
+
+.textarea-count {
+  bottom: 20px;
+  right: 10px;
+}
