@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { debounce } from 'lodash';
-import logo from './assets/logo.jpeg';
 
 const SEOContentOutlineTool = () => {
   const [keyword, setKeyword] = useState('');
@@ -99,29 +98,30 @@ const analyzeMeta = useCallback(debounce(() => {
 
       return (
         <>
-          <div className="input-wrapper">
-            <input
-              type="text"
-              value={metaTitle}
-              onChange={(e) => setMetaTitle(e.target.value)}
-              placeholder="Enter meta title here..."
-              style={{ color: metaTitleColor }}
-            />
-            <span className="character-count" style={{ color: metaTitleColor }}>
-              {metaTitle.length} / 60
-            </span>
-          </div>
-          <div className="input-wrapper">
-            <textarea
-              value={metaDescription}
-              onChange={(e) => setMetaDescription(e.target.value)}
-              placeholder="Enter meta description here..."
-              style={{ color: metaDescriptionColor }}
-            />
-            <span className="character-count" style={{ color: metaDescriptionColor }}>
-              {metaDescription.length} / 160
-            </span>
-          </div>
+<div className="input-wrapper">
+  <input
+    type="text"
+    value={metaTitle}
+    onChange={(e) => setMetaTitle(e.target.value)}
+    placeholder="Enter meta title here..."
+    style={{ color: metaTitleColor }}
+  />
+  <span className="character-count" style={{ color: metaTitleColor }}>
+    {metaTitle.length} / 60
+  </span>
+</div>
+<div className="input-wrapper">
+  <textarea
+    value={metaDescription}
+    onChange={(e) => setMetaDescription(e.target.value)}
+    placeholder="Enter meta description here..."
+    style={{ color: metaDescriptionColor }}
+  />
+  <span className="character-count textarea-count" style={{ color: metaDescriptionColor }}>
+    {metaDescription.length} / 160
+  </span>
+</div>
+
           <GooglePreview />
           <div>
             <h3>Meta Feedback:</h3>
@@ -152,10 +152,11 @@ const analyzeMeta = useCallback(debounce(() => {
     return null;
   };
 
+  // ... (keep the rest of the component code)
+
   return (
     <div className="container">
       <header style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
-        <img src={logo} alt="Logo" style={{ height: '50px', marginRight: '20px' }} />
         <h1>UDigital Meta SEO Tool</h1>
       </header>
       <div className="tabs">
