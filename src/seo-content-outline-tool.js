@@ -99,7 +99,7 @@ const analyzeMeta = useCallback(debounce(() => {
 
       return (
         <>
-          <div className="input-wrapper">
+<div className="input-wrapper">
   <input
     type="text"
     value={metaTitle}
@@ -122,7 +122,8 @@ const analyzeMeta = useCallback(debounce(() => {
     {metaDescription.length} / 160
   </span>
 </div>
-      
+
+
           <GooglePreview />
           <div>
             <h3>Meta Feedback:</h3>
