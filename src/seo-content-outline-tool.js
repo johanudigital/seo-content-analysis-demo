@@ -100,28 +100,29 @@ const analyzeMeta = useCallback(debounce(() => {
       return (
         <>
           <div className="input-wrapper">
-            <input
-              type="text"
-              value={metaTitle}
-              onChange={(e) => setMetaTitle(e.target.value)}
-              placeholder="Enter meta title here..."
-              style={{ color: metaTitleColor }}
-            />
-            <span className="character-count" style={{ color: metaTitleColor }}>
-              {metaTitle.length} / 60
-            </span>
-          </div>
-          <div className="input-wrapper">
-            <textarea
-              value={metaDescription}
-              onChange={(e) => setMetaDescription(e.target.value)}
-              placeholder="Enter meta description here..."
-              style={{ color: metaDescriptionColor }}
-            />
-            <span className="character-count" style={{ color: metaDescriptionColor }}>
-              {metaDescription.length} / 160
-            </span>
-          </div>
+  <input
+    type="text"
+    value={metaTitle}
+    onChange={(e) => setMetaTitle(e.target.value)}
+    placeholder="Enter meta title here..."
+    style={{ color: metaTitleColor }}
+  />
+  <span className="character-count" style={{ color: metaTitleColor }}>
+    {metaTitle.length} / 60
+  </span>
+</div>
+<div className="input-wrapper">
+  <textarea
+    value={metaDescription}
+    onChange={(e) => setMetaDescription(e.target.value)}
+    placeholder="Enter meta description here..."
+    style={{ color: metaDescriptionColor }}
+  />
+  <span className="character-count textarea-count" style={{ color: metaDescriptionColor }}>
+    {metaDescription.length} / 160
+  </span>
+</div>
+      
           <GooglePreview />
           <div>
             <h3>Meta Feedback:</h3>
