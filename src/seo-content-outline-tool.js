@@ -9,8 +9,11 @@ const SEOContentOutlineTool = () => {
   const [metaTitleFeedback, setMetaTitleFeedback] = useState([]);
   const [metaDescriptionFeedback, setMetaDescriptionFeedback] = useState([]);
   const [activeTab, setActiveTab] = useState('metaContent');
+  const [url, setUrl] = useState('');
+  const [analysis, setAnalysis] = useState('');
+  const [loading, setLoading] = useState(false);
 
-const analyzeMeta = useCallback(debounce(() => {
+  const analyzeMeta = useCallback(debounce(() => {
     let titleFeedbackItems = [];
     let descriptionFeedbackItems = [];
 
@@ -67,6 +70,25 @@ const analyzeMeta = useCallback(debounce(() => {
     }
   }, [activeTab, metaTitle, metaDescription, analyzeMeta]);
 
+  const analyzeUrl = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('https://seo-tool-backend-n3tbs4r7z-johans-projects-3dabe40b.vercel.app', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url }),
+      });
+      const data = await response.json();
+      setAnalysis(data.analysis);
+    } catch (error) {
+      console.error('Error:', error);
+      setAnalysis('An error occurred while analyzing the URL');
+    }
+    setLoading(false);
+  };
+
   const FeedbackItem = useMemo(() => ({ item }) => (
     <li className={`feedback-item ${item.type}`}>
       {item.type === 'success' && '✅ '}
@@ -99,30 +121,29 @@ const analyzeMeta = useCallback(debounce(() => {
 
       return (
         <>
-<div className="input-wrapper">
-  <input
-    type="text"
-    value={metaTitle}
-    onChange={(e) => setMetaTitle(e.target.value)}
-    placeholder="Enter meta title here..."
-    style={{ color: metaTitleColor }}
-  />
-  <span className="character-count" style={{ color: metaTitleColor }}>
-    {metaTitle.length} / 60
-  </span>
-</div>
-<div className="input-wrapper">
-  <textarea
-    value={metaDescription}
-    onChange={(e) => setMetaDescription(e.target.value)}
-    placeholder="Enter meta description here..."
-    style={{ color: metaDescriptionColor }}
-  />
-  <span className="character-count textarea-count" style={{ color: metaDescriptionColor }}>
-    {metaDescription.length} / 160
-  </span>
-</div>
-
+          <div className="input-wrapper">
+            <input
+              type="text"
+              value={metaTitle}
+              onChange={(e) => setMetaTitle(e.target.value)}
+              placeholder="Enter meta title here..."
+              style={{ color: metaTitleColor }}
+            />
+            <span className="character-count" style={{ color: metaTitleColor }}>
+              {metaTitle.length} / 60
+            </span>
+          </div>
+          <div className="input-wrapper">
+            <textarea
+              value={metaDescription}
+              onChange={(e) => setMetaDescription(e.target.value)}
+              placeholder="Enter meta description here..."
+              style={{ color: metaDescriptionColor }}
+            />
+            <span className="character-count textarea-count" style={{ color: metaDescriptionColor }}>
+              {metaDescription.length} / 160
+            </span>
+          </div>
 
           <GooglePreview />
           <div>
@@ -150,6 +171,26 @@ const analyzeMeta = useCallback(debounce(() => {
           </div>
         </>
       );
+    } else if (activeTab === 'urlAnalysis') {
+      return (
+        <div>
+          <input
+            type="text"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="Enter URL to analyze"
+          />
+          <button onClick={analyzeUrl} disabled={loading}>
+            {loading ? 'Analyzing...' : 'Analyze URL'}
+          </button>
+          {analysis && (
+            <div>
+              <h3>Analysis Result:</h3>
+              <pre>{analysis}</pre>
+            </div>
+          )}
+        </div>
+      );
     }
     return null;
   };
@@ -166,6 +207,12 @@ const analyzeMeta = useCallback(debounce(() => {
           className={`tab ${activeTab === 'metaContent' ? 'active' : ''}`}
         >
           Meta Content
+        </button>
+        <button
+          onClick={() => setActiveTab('urlAnalysis')}
+          className={`tab ${activeTab === 'urlAnalysis' ? 'active' : ''}`}
+        >
+          URL Analysis
         </button>
       </div>
       <div className="input-group">
