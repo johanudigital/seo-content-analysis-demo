@@ -73,24 +73,34 @@ const SEOContentOutlineTool = () => {
     }
   }, [activeTab, metaTitle, metaDescription, analyzeMeta]);
 
-  const analyzeUrl = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('https://seo-tool-backend.vercel.app/api/analyze', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ url, keyword }),
-      });
-      const data = await response.json();
+const analyzeUrl = async () => {
+  setLoading(true);
+  try {
+    const response = await fetch('https://seo-tool-backend.vercel.app/api/analyze', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ url, keyword }),
+    });
+    const data = await response.json();
+    
+    // Update this section
+    if (data.metaTitle) {
       setMetaTitle(data.metaTitle);
-    } catch (error) {
-      console.error('Error:', error);
-      setAnalysis('An error occurred while analyzing the URL');
     }
-    setLoading(false);
-  };
+    if (data.metaDescription) {
+      setMetaDescription(data.metaDescription);
+    }
+    if (data.analysis) {
+      setAnalysis(data.analysis);
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    setAnalysis('An error occurred while analyzing the URL');
+  }
+  setLoading(false);
+};
 
   const FeedbackItem = useMemo(() => ({ item }) => (
     <li className={`feedback-item ${item.type}`}>
