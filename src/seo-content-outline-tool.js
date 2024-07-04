@@ -204,13 +204,13 @@ const SEOContentOutlineTool = () => {
       <div className="tabs">
         <button
           onClick={() => setActiveTab('metaContent')}
-          className={tab ${activeTab === 'metaContent' ? 'active' : ''}}
+          className={`tab ${activeTab === 'metaContent' ? 'active' : ''}`}
         >
           Meta Content
         </button>
         <button
           onClick={() => setActiveTab('urlAnalysis')}
-          className={tab ${activeTab === 'urlAnalysis' ? 'active' : ''}}
+          className={`tab ${activeTab === 'urlAnalysis' ? 'active' : ''}`}
         >
           URL Analysis
         </button>
