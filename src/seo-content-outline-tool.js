@@ -71,23 +71,23 @@ const SEOContentOutlineTool = () => {
   }, [activeTab, metaTitle, metaDescription, analyzeMeta]);
 
   const analyzeUrl = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('https://seo-tool-backend.vercel.app/api/analyze', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ url }),
-      });
-      const data = await response.json();
-      setAnalysis(data.analysis);
-    } catch (error) {
-      console.error('Error:', error);
-      setAnalysis('An error occurred while analyzing the URL');
-    }
-    setLoading(false);
-  };
+  setLoading(true);
+  try {
+    const response = await fetch('https://seo-tool-backend.vercel.app/api/analyze', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ url, keyword }), // Include keyword in the request body
+    });
+    const data = await response.json();
+    setMetaTitle(data.metaTitle); // Update metaTitle state with the retrieved meta title
+  } catch (error) {
+    console.error('Error:', error);
+    setAnalysis('An error occurred while analyzing the URL');
+  }
+  setLoading(false);
+};
 
   const FeedbackItem = useMemo(() => ({ item }) => (
     <li className={`feedback-item ${item.type}`}>
