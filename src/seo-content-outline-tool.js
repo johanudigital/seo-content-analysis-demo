@@ -90,13 +90,13 @@ const SEOContentOutlineTool = () => {
   };
 
   const FeedbackItem = useMemo(() => ({ item }) => (
-    <li className={feedback-item ${item.type}}>
-      {item.type === 'success' && '✅ '}
-      {item.type === 'error' && '❌ '}
-      {item.type === 'warning' && '⚠️ '}
-      {item.message}
-    </li>
-  ), []);
+  <li className={`feedback-item ${item.type}`}>
+    {item.type === 'success' && '✅ '}
+    {item.type === 'error' && '❌ '}
+    {item.type === 'warning' && '⚠️ '}
+    {item.message}
+  </li>
+), []);
 
   const getTextColor = (length, thresholds) => {
     if (length > thresholds.red) return 'red';
