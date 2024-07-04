@@ -85,15 +85,14 @@ const analyzeUrl = async () => {
     });
     const data = await response.json();
     
-    // Update this section
+    if (data.analysis) {
+      setAnalysis(data.analysis);
+    }
     if (data.metaTitle) {
       setMetaTitle(data.metaTitle);
     }
     if (data.metaDescription) {
       setMetaDescription(data.metaDescription);
-    }
-    if (data.analysis) {
-      setAnalysis(data.analysis);
     }
   } catch (error) {
     console.error('Error:', error);
@@ -199,7 +198,7 @@ const analyzeUrl = async () => {
           {analysis && (
             <div>
               <h3>Analysis Result:</h3>
-              <pre>{analysis}</pre>
+              <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>{analysis}</pre>
             </div>
           )}
         </div>
