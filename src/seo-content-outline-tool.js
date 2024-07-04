@@ -13,56 +13,59 @@ const SEOContentOutlineTool = () => {
   const [analysis, setAnalysis] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const analyzeMeta = useCallback(debounce(() => {
-    let titleFeedbackItems = [];
-    let descriptionFeedbackItems = [];
+  const analyzeMeta = useCallback(
+    debounce(() => {
+      let titleFeedbackItems = [];
+      let descriptionFeedbackItems = [];
 
-    const titleLength = metaTitle.length;
-    if (titleLength >= 50 && titleLength <= 60) {
-      titleFeedbackItems.push({ type: 'success', message: "Good meta title length (50-60 characters)" });
-    } else if (titleLength < 50) {
-      titleFeedbackItems.push({ type: 'error', message: "Meta title is too short. Aim for 50-60 characters" });
-    } else {
-      titleFeedbackItems.push({ type: 'error', message: "Meta title is too long. Aim for 50-60 characters" });
-    }
+      const titleLength = metaTitle.length;
+      if (titleLength >= 50 && titleLength <= 60) {
+        titleFeedbackItems.push({ type: 'success', message: "Good meta title length (50-60 characters)" });
+      } else if (titleLength < 50) {
+        titleFeedbackItems.push({ type: 'error', message: "Meta title is too short. Aim for 50-60 characters" });
+      } else {
+        titleFeedbackItems.push({ type: 'error', message: "Meta title is too long. Aim for 50-60 characters" });
+      }
 
-    if (metaTitle.toLowerCase().includes(keyword.toLowerCase())) {
-      titleFeedbackItems.push({ type: 'success', message: "Keyword present in meta title" });
-    } else {
-      titleFeedbackItems.push({ type: 'error', message: "Include the keyword in the meta title" });
-    }
+      if (metaTitle.toLowerCase().includes(keyword.toLowerCase())) {
+        titleFeedbackItems.push({ type: 'success', message: "Keyword present in meta title" });
+      } else {
+        titleFeedbackItems.push({ type: 'error', message: "Include the keyword in the meta title" });
+      }
 
-    const ctaKeywords = ["buy", "get", "try", "find", "learn"];
-    if (ctaKeywords.some(cta => metaTitle.toLowerCase().includes(cta))) {
-      titleFeedbackItems.push({ type: 'success', message: "Call-to-Action keyword present in meta title" });
-    } else {
-      titleFeedbackItems.push({ type: 'warning', message: "Consider adding a Call-to-Action keyword in the meta title" });
-    }
+      const ctaKeywords = ["buy", "get", "try", "find", "learn"];
+      if (ctaKeywords.some(cta => metaTitle.toLowerCase().includes(cta))) {
+        titleFeedbackItems.push({ type: 'success', message: "Call-to-Action keyword present in meta title" });
+      } else {
+        titleFeedbackItems.push({ type: 'warning', message: "Consider adding a Call-to-Action keyword in the meta title" });
+      }
 
-    const descriptionLength = metaDescription.length;
-    if (descriptionLength >= 50 && descriptionLength <= 160) {
-      descriptionFeedbackItems.push({ type: 'success', message: "Good meta description length (50-160 characters)" });
-    } else if (descriptionLength < 50) {
-      descriptionFeedbackItems.push({ type: 'error', message: "Meta description is too short. Aim for 50-160 characters" });
-    } else {
-      descriptionFeedbackItems.push({ type: 'error', message: "Meta description is too long. Aim for 50-160 characters" });
-    }
+      const descriptionLength = metaDescription.length;
+      if (descriptionLength >= 50 && descriptionLength <= 160) {
+        descriptionFeedbackItems.push({ type: 'success', message: "Good meta description length (50-160 characters)" });
+      } else if (descriptionLength < 50) {
+        descriptionFeedbackItems.push({ type: 'error', message: "Meta description is too short. Aim for 50-160 characters" });
+      } else {
+        descriptionFeedbackItems.push({ type: 'error', message: "Meta description is too long. Aim for 50-160 characters" });
+      }
 
-    if (metaDescription.toLowerCase().includes(keyword.toLowerCase())) {
-      descriptionFeedbackItems.push({ type: 'success', message: "Keyword present in meta description" });
-    } else {
-      descriptionFeedbackItems.push({ type: 'error', message: "Include the keyword in the meta description" });
-    }
+      if (metaDescription.toLowerCase().includes(keyword.toLowerCase())) {
+        descriptionFeedbackItems.push({ type: 'success', message: "Keyword present in meta description" });
+      } else {
+        descriptionFeedbackItems.push({ type: 'error', message: "Include the keyword in the meta description" });
+      }
 
-    if (ctaKeywords.some(cta => metaDescription.toLowerCase().includes(cta))) {
-      descriptionFeedbackItems.push({ type: 'success', message: "Call-to-Action present in meta description" });
-    } else {
-      descriptionFeedbackItems.push({ type: 'warning', message: "Consider adding a Call-to-Action in the meta description" });
-    }
+      if (ctaKeywords.some(cta => metaDescription.toLowerCase().includes(cta))) {
+        descriptionFeedbackItems.push({ type: 'success', message: "Call-to-Action present in meta description" });
+      } else {
+        descriptionFeedbackItems.push({ type: 'warning', message: "Consider adding a Call-to-Action in the meta description" });
+      }
 
-    setMetaTitleFeedback(titleFeedbackItems);
-    setMetaDescriptionFeedback(descriptionFeedbackItems);
-  }, 500), [metaTitle, metaDescription, keyword]);
+      setMetaTitleFeedback(titleFeedbackItems);
+      setMetaDescriptionFeedback(descriptionFeedbackItems);
+    }, 500),
+    [metaTitle, metaDescription, keyword]
+  );
 
   useEffect(() => {
     if (activeTab === 'metaContent' && (metaTitle || metaDescription)) {
@@ -71,23 +74,23 @@ const SEOContentOutlineTool = () => {
   }, [activeTab, metaTitle, metaDescription, analyzeMeta]);
 
   const analyzeUrl = async () => {
-  setLoading(true);
-  try {
-    const response = await fetch('https://seo-tool-backend.vercel.app/api/analyze', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ url, keyword }), // Include keyword in the request body
-    });
-    const data = await response.json();
-    setMetaTitle(data.metaTitle); // Update metaTitle state with the retrieved meta title
-  } catch (error) {
-    console.error('Error:', error);
-    setAnalysis('An error occurred while analyzing the URL');
-  }
-  setLoading(false);
-};
+    setLoading(true);
+    try {
+      const response = await fetch('https://seo-tool-backend.vercel.app/api/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url, keyword }),
+      });
+      const data = await response.json();
+      setMetaTitle(data.metaTitle);
+    } catch (error) {
+      console.error('Error:', error);
+      setAnalysis('An error occurred while analyzing the URL');
+    }
+    setLoading(false);
+  };
 
   const FeedbackItem = useMemo(() => ({ item }) => (
     <li className={`feedback-item ${item.type}`}>
