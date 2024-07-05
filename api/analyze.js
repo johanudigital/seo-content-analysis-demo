@@ -2,11 +2,14 @@ const axios = require('axios');
 require('dotenv').config();
 
 module.exports = async (req, res) => {
+  // Set CORS headers for all requests
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+
+  // Handle preflight request
   if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-    res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
     return res.status(200).end();
   }
 
@@ -42,17 +45,15 @@ module.exports = async (req, res) => {
  
       console.log(`OpenAI API call completed in ${Date.now() - startTime}ms`);
       const analysis = openaiResponse.data.choices[0].message.content;
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.status(200).json({ analysis });
+      return res.status(200).json({ analysis });
     } catch (error) {
       console.error('Error occurred:', error);
-      res.status(500).json({ 
+      return res.status(500).json({ 
         error: 'An error occurred while processing your request', 
         details: error.message
       });
     }
   } else {
-    res.setHeader('Allow', ['POST']);
-    res.status(405).json({ error: `Method ${req.method} Not Allowed` });
+    return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
   }
 };
