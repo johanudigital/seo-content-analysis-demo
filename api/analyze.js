@@ -3,6 +3,10 @@ require('dotenv').config();
 
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+    res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
     return res.status(200).end();
   }
 
@@ -38,6 +42,7 @@ module.exports = async (req, res) => {
  
       console.log(`OpenAI API call completed in ${Date.now() - startTime}ms`);
       const analysis = openaiResponse.data.choices[0].message.content;
+      res.setHeader('Access-Control-Allow-Origin', '*');
       res.status(200).json({ analysis });
     } catch (error) {
       console.error('Error occurred:', error);
