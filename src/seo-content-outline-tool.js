@@ -1,5 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import logo from './assets/logo.jpeg';
 
 const debounce = (func, wait) => {
@@ -25,97 +24,168 @@ const SEOContentOutlineTool = () => {
   const [analysis, setAnalysis] = useState('');
   const [loading, setLoading] = useState(false);
 
-  console.log('Rendering SEOContentOutlineTool');
+  const analyzeMeta = useCallback(debounce(() => {
+    let titleFeedbackItems = [];
+    let descriptionFeedbackItems = [];
 
-  const analyzeMeta = useCallback(
-    debounce(() => {
-      let titleFeedbackItems = [];
-      let descriptionFeedbackItems = [];
+    const titleLength = metaTitle.length;
+    if (titleLength >= 50 && titleLength <= 60) {
+      titleFeedbackItems.push({ type: 'success', message: "Good meta title length (50-60 characters)" });
+    } else if (titleLength < 50) {
+      titleFeedbackItems.push({ type: 'error', message: "Meta title is too short. Aim for 50-60 characters" });
+    } else {
+      titleFeedbackItems.push({ type: 'error', message: "Meta title is too long. Aim for 50-60 characters" });
+    }
 
-      const titleLength = metaTitle.length;
-      if (titleLength >= 50 && titleLength <= 60) {
-        titleFeedbackItems.push({ type: 'success', message: 'Good meta title length (50-60 characters)' });
-      } else if (titleLength < 50) {
-        titleFeedbackItems.push({ type: 'error', message: 'Meta title is too short. Aim for 50-60 characters' });
-      } else {
-        titleFeedbackItems.push({ type: 'error', message: 'Meta title is too long. Aim for 50-60 characters' });
-      }
+    if (metaTitle.toLowerCase().includes(keyword.toLowerCase())) {
+      titleFeedbackItems.push({ type: 'success', message: "Keyword present in meta title" });
+    } else {
+      titleFeedbackItems.push({ type: 'error', message: "Include the keyword in the meta title" });
+    }
 
-      if (metaTitle.toLowerCase().includes(keyword.toLowerCase())) {
-        titleFeedbackItems.push({ type: 'success', message: 'Keyword present in meta title' });
-      } else {
-        titleFeedbackItems.push({ type: 'error', message: 'Include the keyword in the meta title' });
-      }
+    const ctaKeywords = ["buy", "get", "try", "find", "learn"];
+    if (ctaKeywords.some(cta => metaTitle.toLowerCase().includes(cta))) {
+      titleFeedbackItems.push({ type: 'success', message: "Call-to-Action keyword present in meta title" });
+    } else {
+      titleFeedbackItems.push({ type: 'warning', message: "Consider adding a Call-to-Action keyword in the meta title" });
+    }
 
-      setMetaTitleFeedback(titleFeedbackItems);
-      setMetaDescriptionFeedback(descriptionFeedbackItems);
-    }, 500),
-    [metaTitle, keyword, metaDescription]
-  );
+    const descriptionLength = metaDescription.length;
+    if (descriptionLength >= 50 && descriptionLength <= 160) {
+      descriptionFeedbackItems.push({ type: 'success', message: "Good meta description length (50-160 characters)" });
+    } else if (descriptionLength < 50) {
+      descriptionFeedbackItems.push({ type: 'error', message: "Meta description is too short. Aim for 50-160 characters" });
+    } else {
+      descriptionFeedbackItems.push({ type: 'error', message: "Meta description is too long. Aim for 50-160 characters" });
+    }
+
+    if (metaDescription.toLowerCase().includes(keyword.toLowerCase())) {
+      descriptionFeedbackItems.push({ type: 'success', message: "Keyword present in meta description" });
+    } else {
+      descriptionFeedbackItems.push({ type: 'error', message: "Include the keyword in the meta description" });
+    }
+
+    if (ctaKeywords.some(cta => metaDescription.toLowerCase().includes(cta))) {
+      descriptionFeedbackItems.push({ type: 'success', message: "Call-to-Action present in meta description" });
+    } else {
+      descriptionFeedbackItems.push({ type: 'warning', message: "Consider adding a Call-to-Action in the meta description" });
+    }
+
+    setMetaTitleFeedback(titleFeedbackItems);
+    setMetaDescriptionFeedback(descriptionFeedbackItems);
+  }, 500), [metaTitle, metaDescription, keyword]);
 
   useEffect(() => {
-    analyzeMeta();
-  }, [metaTitle, metaDescription, analyzeMeta]);
+    if (activeTab === 'metaContent' && (metaTitle || metaDescription)) {
+      analyzeMeta();
+    }
+  }, [activeTab, metaTitle, metaDescription, analyzeMeta]);
 
- const analyzeUrl = async () => {
-  console.log('Analyzing URL:', url);
-  setLoading(true);
-  setAnalysis('');
-
-  try {
-    const response = await axios.post('/api/analyze', { url });
-    console.log('Analysis response:', response.data);
-    setAnalysis(response.data.analysis);
-  } catch (error) {
-    console.error('Error analyzing URL:', error);
-    alert('There was an error analyzing the URL. Please try again later.');
-  } finally {
+  const analyzeUrl = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url }),
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setAnalysis(data.analysis);
+    } catch (error) {
+      console.error('Error:', error);
+      setAnalysis(error.message || 'An error occurred while analyzing the URL');
+    }
     setLoading(false);
-  }
-};
+  };
 
+  const FeedbackItem = useMemo(() => ({ item }) => (
+    <li className={`feedback-item ${item.type}`}>
+      {item.type === 'success' && '✅ '}
+      {item.type === 'error' && '❌ '}
+      {item.type === 'warning' && '⚠️ '}
+      {item.message}
+    </li>
+  ), []);
 
+  const getTextColor = (length, thresholds) => {
+    if (length > thresholds.red) return 'red';
+    if (length > thresholds.orange) return 'orange';
+    return 'inherit';
+  };
+
+  const GooglePreview = () => (
+    <div className="google-preview">
+      <div className="preview-title">{metaTitle || 'Enter a title to see preview'}</div>
+      <div className="preview-url">https://www.example.com › page</div>
+      <div className="preview-description">
+        {metaDescription || 'Enter a description to see preview'}
+      </div>
+    </div>
+  );
 
   const renderTabContent = () => {
-    console.log('Rendering tab content for:', activeTab);
     if (activeTab === 'metaContent') {
+      const metaTitleColor = getTextColor(metaTitle.length, { orange: 60, red: 80 });
+      const metaDescriptionColor = getTextColor(metaDescription.length, { orange: 160, red: 200 });
+
       return (
         <>
-          <input
-            type="text"
-            value={metaTitle}
-            onChange={(e) => setMetaTitle(e.target.value)}
-            placeholder="Enter meta title"
-          />
-          <textarea
-            value={metaDescription}
-            onChange={(e) => setMetaDescription(e.target.value)}
-            placeholder="Enter meta description"
-          />
-          <div>
-            <h4>Meta Title Feedback:</h4>
-            <ul className="feedback">
-              {metaTitleFeedback.map((item, index) => (
-                <li key={index} className={item.type}>
-                  {item.message}
-                </li>
-              ))}
-            </ul>
+          <div className="input-wrapper">
+            <input
+              type="text"
+              value={metaTitle}
+              onChange={(e) => setMetaTitle(e.target.value)}
+              placeholder="Enter meta title here..."
+              style={{ color: metaTitleColor }}
+            />
+            <span className="character-count" style={{ color: metaTitleColor }}>
+              {metaTitle.length} / 60
+            </span>
           </div>
+          <div className="input-wrapper">
+            <textarea
+              value={metaDescription}
+              onChange={(e) => setMetaDescription(e.target.value)}
+              placeholder="Enter meta description here..."
+              style={{ color: metaDescriptionColor }}
+            />
+            <span className="character-count textarea-count" style={{ color: metaDescriptionColor }}>
+              {metaDescription.length} / 160
+            </span>
+          </div>
+
+          <GooglePreview />
           <div>
-            <h4>Meta Description Feedback:</h4>
-            <ul className="feedback">
-              {metaDescriptionFeedback.map((item, index) => (
-                <li key={index} className={item.type}>
-                  {item.message}
-                </li>
-              ))}
-            </ul>
+            <h3>Meta Feedback:</h3>
+            {metaTitle && (
+              <>
+                <h4>Meta Title Feedback:</h4>
+                <ul className="feedback">
+                  {metaTitleFeedback.map((item, index) => (
+                    <FeedbackItem key={index} item={item} />
+                  ))}
+                </ul>
+              </>
+            )}
+            {metaDescription && (
+              <>
+                <h4>Meta Description Feedback:</h4>
+                <ul className="feedback">
+                  {metaDescriptionFeedback.map((item, index) => (
+                    <FeedbackItem key={index} item={item} />
+                  ))}
+                </ul>
+              </>
+            )}
           </div>
         </>
       );
     } else if (activeTab === 'urlAnalysis') {
-      console.log('URL Analysis tab selected');
       return (
         <div>
           <input
@@ -143,7 +213,7 @@ const SEOContentOutlineTool = () => {
     <div className="container">
       <header style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
         <img src={logo} alt="Logo" style={{ height: '50px', marginRight: '20px' }} />
-        <h1>SEO Content Analysis Tool</h1>
+        <h1>UDigital Meta SEO Tool</h1>
       </header>
       <div className="tabs">
         <button
