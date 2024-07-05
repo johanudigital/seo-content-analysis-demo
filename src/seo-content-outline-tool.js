@@ -1,6 +1,17 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { debounce } from 'lodash';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import logo from './assets/logo.jpeg';
+
+const debounce = (func, wait) => {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+};
 
 const SEOContentOutlineTool = () => {
   const [keyword, setKeyword] = useState('');
@@ -73,30 +84,33 @@ const SEOContentOutlineTool = () => {
   const analyzeUrl = async () => {
     setLoading(true);
     try {
-      const response = await fetch('https://seo-tool-backend.vercel.app/api/analyze', {
+      const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ url }),
       });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
       setAnalysis(data.analysis);
     } catch (error) {
       console.error('Error:', error);
-      setAnalysis('An error occurred while analyzing the URL');
+      setAnalysis(error.message || 'An error occurred while analyzing the URL');
     }
     setLoading(false);
   };
 
   const FeedbackItem = useMemo(() => ({ item }) => (
-  <li className={`feedback-item ${item.type}`}>
-    {item.type === 'success' && '✅ '}
-    {item.type === 'error' && '❌ '}
-    {item.type === 'warning' && '⚠️ '}
-    {item.message}
-  </li>
-), []);
+    <li className={`feedback-item ${item.type}`}>
+      {item.type === 'success' && '✅ '}
+      {item.type === 'error' && '❌ '}
+      {item.type === 'warning' && '⚠️ '}
+      {item.message}
+    </li>
+  ), []);
 
   const getTextColor = (length, thresholds) => {
     if (length > thresholds.red) return 'red';
