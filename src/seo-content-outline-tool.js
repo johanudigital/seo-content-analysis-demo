@@ -84,7 +84,7 @@ const SEOContentOutlineTool = () => {
 const analyzeUrl = async () => {
   setLoading(true);
   try {
-    const response = await fetch('https://seo-content-analysis-demo.vercel.app/api/analyze', {
+    const response = await fetch('/api/analyze', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -102,6 +102,7 @@ const analyzeUrl = async () => {
   }
   setLoading(false);
 };
+
 
 
   const FeedbackItem = useMemo(() => ({ item }) => (
