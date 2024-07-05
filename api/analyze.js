@@ -2,12 +2,8 @@ const axios = require('axios');
 require('dotenv').config();
 
 module.exports = async (req, res) => {
-  // CORS headers are now handled by Vercel.json, so we can remove them from here
-
-  // Handle preflight request
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+    return res.status(200).end();
   }
 
   if (req.method === 'POST') {
@@ -45,34 +41,9 @@ module.exports = async (req, res) => {
       res.status(200).json({ analysis });
     } catch (error) {
       console.error('Error occurred:', error);
-      
-      let errorMessage = 'An error occurred while processing your request';
-      let errorDetails = {};
-      if (error.response) {
-        errorMessage = 'Error response from OpenAI API';
-        errorDetails = {
-          data: error.response.data,
-          status: error.response.status,
-          headers: error.response.headers,
-        };
-      } else if (error.request) {
-        errorMessage = 'No response received from OpenAI API';
-        errorDetails = {
-          request: error.request,
-        };
-      } else {
-        errorMessage = 'Error setting up the request';
-        errorDetails = {
-          message: error.message,
-        };
-      }
-      if (error.code === 'ECONNABORTED') {
-        errorMessage = 'Request timed out';
-      }
-      console.error('Error details:', JSON.stringify(errorDetails));
       res.status(500).json({ 
-        error: errorMessage, 
-        details: JSON.stringify(errorDetails)
+        error: 'An error occurred while processing your request', 
+        details: error.message
       });
     }
   } else {
