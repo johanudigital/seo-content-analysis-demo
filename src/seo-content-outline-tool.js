@@ -57,22 +57,24 @@ const SEOContentOutlineTool = () => {
     analyzeMeta();
   }, [metaTitle, metaDescription, analyzeMeta]);
 
-  const analyzeUrl = async () => {
-    console.log('Analyzing URL:', url);
-    setLoading(true);
-    setAnalysis('');
+ const analyzeUrl = async () => {
+  console.log('Analyzing URL:', url);
+  setLoading(true);
+  setAnalysis('');
 
-    try {
-      const response = await axios.post('/api/analyze', { url });
-      console.log('Analysis response:', response.data);
-      setAnalysis(response.data.analysis);
-    } catch (error) {
-      console.error('Error analyzing URL:', error);
-      alert('There was an error analyzing the URL. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    const response = await axios.post('/api/analyze', { url });
+    console.log('Analysis response:', response.data);
+    setAnalysis(response.data.analysis);
+  } catch (error) {
+    console.error('Error analyzing URL:', error);
+    alert('There was an error analyzing the URL. Please try again later.');
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   const renderTabContent = () => {
     console.log('Rendering tab content for:', activeTab);
