@@ -84,11 +84,10 @@ const SEOContentOutlineTool = () => {
 const analyzeUrl = async () => {
   setLoading(true);
   try {
-    const response = await fetch('https://seo-content-analysis-demo.vercel.app/api/analyze', { // Ensure this URL is correct
+    const response = await fetch('https://seo-content-analysis-demo.vercel.app/api/analyze', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*', // Ensure CORS headers match those set in API
       },
       body: JSON.stringify({ url }),
     });
