@@ -2,11 +2,7 @@ const axios = require('axios');
 require('dotenv').config();
 
 module.exports = async (req, res) => {
-  // Set CORS headers
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', 'https://seo-content-analysis-demo.vercel.app/'); // Update this with your actual URL
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+  // CORS headers are now handled by Vercel.json, so we can remove them from here
 
   // Handle preflight request
   if (req.method === 'OPTIONS') {
@@ -16,7 +12,7 @@ module.exports = async (req, res) => {
 
   if (req.method === 'POST') {
     const { url } = req.body;
-
+    
     if (!url) {
       return res.status(400).json({ error: 'URL is required' });
     }
@@ -24,7 +20,6 @@ module.exports = async (req, res) => {
     try {
       console.log('Starting OpenAI API call...');
       const startTime = Date.now();
-
       const openaiResponse = await axios.post('https://api.openai.com/v1/chat/completions', {
         model: "gpt-3.5-turbo",
         messages: [
@@ -44,17 +39,15 @@ module.exports = async (req, res) => {
         },
         timeout: 50000 // 50 seconds timeout
       });
-
+ 
       console.log(`OpenAI API call completed in ${Date.now() - startTime}ms`);
-
       const analysis = openaiResponse.data.choices[0].message.content;
       res.status(200).json({ analysis });
     } catch (error) {
       console.error('Error occurred:', error);
-
+      
       let errorMessage = 'An error occurred while processing your request';
       let errorDetails = {};
-
       if (error.response) {
         errorMessage = 'Error response from OpenAI API';
         errorDetails = {
@@ -73,13 +66,10 @@ module.exports = async (req, res) => {
           message: error.message,
         };
       }
-
       if (error.code === 'ECONNABORTED') {
         errorMessage = 'Request timed out';
       }
-
       console.error('Error details:', JSON.stringify(errorDetails));
-
       res.status(500).json({ 
         error: errorMessage, 
         details: JSON.stringify(errorDetails)
