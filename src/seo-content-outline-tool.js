@@ -81,27 +81,29 @@ const SEOContentOutlineTool = () => {
     }
   }, [activeTab, metaTitle, metaDescription, analyzeMeta]);
 
-  const analyzeUrl = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ url }),
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      setAnalysis(data.analysis);
-    } catch (error) {
-      console.error('Error:', error);
-      setAnalysis(error.message || 'An error occurred while analyzing the URL');
+const analyzeUrl = async () => {
+  setLoading(true);
+  try {
+    const response = await fetch('https://your-vercel-domain/api/analyze', { // Ensure this URL is correct
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*', // Ensure CORS headers match those set in API
+      },
+      body: JSON.stringify({ url }),
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    setLoading(false);
-  };
+    const data = await response.json();
+    setAnalysis(data.analysis);
+  } catch (error) {
+    console.error('Error:', error);
+    setAnalysis(error.message || 'An error occurred while analyzing the URL');
+  }
+  setLoading(false);
+};
+
 
   const FeedbackItem = useMemo(() => ({ item }) => (
     <li className={`feedback-item ${item.type}`}>
