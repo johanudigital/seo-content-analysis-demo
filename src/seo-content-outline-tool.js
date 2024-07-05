@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
 import logo from './assets/logo.jpeg';
 
 const debounce = (func, wait) => {
@@ -26,32 +27,52 @@ const SEOContentOutlineTool = () => {
 
   console.log('Rendering SEOContentOutlineTool');
 
-  const analyzeMeta = useCallback(debounce(() => {
-    let titleFeedbackItems = [];
-    let descriptionFeedbackItems = [];
+  const analyzeMeta = useCallback(
+    debounce(() => {
+      let titleFeedbackItems = [];
+      let descriptionFeedbackItems = [];
 
-    const titleLength = metaTitle.length;
-    if (titleLength >= 50 && titleLength <= 60) {
-      titleFeedbackItems.push({ type: 'success', message: "Good meta title length (50-60 characters)" });
-    } else if (titleLength < 50) {
-      titleFeedbackItems.push({ type: 'error', message: "Meta title is too short. Aim for 50-60 characters" });
-    } else {
-      titleFeedbackItems.push({ type: 'error', message: "Meta title is too long. Aim for 50-60 characters" });
-    }
+      const titleLength = metaTitle.length;
+      if (titleLength >= 50 && titleLength <= 60) {
+        titleFeedbackItems.push({ type: 'success', message: 'Good meta title length (50-60 characters)' });
+      } else if (titleLength < 50) {
+        titleFeedbackItems.push({ type: 'error', message: 'Meta title is too short. Aim for 50-60 characters' });
+      } else {
+        titleFeedbackItems.push({ type: 'error', message: 'Meta title is too long. Aim for 50-60 characters' });
+      }
 
-    if (metaTitle.toLowerCase().includes(keyword.toLowerCase())) {
-      titleFeedbackItems.push({ type: 'success', message: "Keyword present in meta title" });
-    } else {
-      titleFeedbackItems.push({ type: 'error', message: "Include the keyword in the meta title" });
-    }
+      if (metaTitle.toLowerCase().includes(keyword.toLowerCase())) {
+        titleFeedbackItems.push({ type: 'success', message: 'Keyword present in meta title' });
+      } else {
+        titleFeedbackItems.push({ type: 'error', message: 'Include the keyword in the meta title' });
+      }
 
-    setMetaTitleFeedback(titleFeedbackItems);
-    setMetaDescriptionFeedback(descriptionFeedbackItems);
-  }, 500), [metaTitle, keyword, metaDescription]);
+      setMetaTitleFeedback(titleFeedbackItems);
+      setMetaDescriptionFeedback(descriptionFeedbackItems);
+    }, 500),
+    [metaTitle, keyword, metaDescription]
+  );
 
   useEffect(() => {
     analyzeMeta();
   }, [metaTitle, metaDescription, analyzeMeta]);
+
+  const analyzeUrl = async () => {
+    console.log('Analyzing URL:', url);
+    setLoading(true);
+    setAnalysis('');
+
+    try {
+      const response = await axios.post('/api/analyze', { url });
+      console.log('Analysis response:', response.data);
+      setAnalysis(response.data.analysis);
+    } catch (error) {
+      console.error('Error analyzing URL:', error);
+      alert('There was an error analyzing the URL. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const renderTabContent = () => {
     console.log('Rendering tab content for:', activeTab);
@@ -73,7 +94,9 @@ const SEOContentOutlineTool = () => {
             <h4>Meta Title Feedback:</h4>
             <ul className="feedback">
               {metaTitleFeedback.map((item, index) => (
-                <li key={index} className={item.type}>{item.message}</li>
+                <li key={index} className={item.type}>
+                  {item.message}
+                </li>
               ))}
             </ul>
           </div>
@@ -81,13 +104,16 @@ const SEOContentOutlineTool = () => {
             <h4>Meta Description Feedback:</h4>
             <ul className="feedback">
               {metaDescriptionFeedback.map((item, index) => (
-                <li key={index} className={item.type}>{item.message}</li>
+                <li key={index} className={item.type}>
+                  {item.message}
+                </li>
               ))}
             </ul>
           </div>
         </>
       );
     } else if (activeTab === 'urlAnalysis') {
+      console.log('URL Analysis tab selected');
       return (
         <div>
           <input
