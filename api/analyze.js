@@ -1,11 +1,12 @@
-const axios = require('axios');
-require('dotenv').config();
+// api/analyze.js
+import { Configuration, OpenAIApi } from "openai";
 
-module.exports = async (req, res) => {
-  // Simplified CORS handling
+export default async function handler(req, res) {
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -19,39 +20,25 @@ module.exports = async (req, res) => {
     }
 
     try {
-      console.log('Starting OpenAI API call...');
-      const startTime = Date.now();
-      const openaiResponse = await axios.post('https://api.openai.com/v1/chat/completions', {
+      const configuration = new Configuration({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+      const openai = new OpenAIApi(configuration);
+
+      const completion = await openai.createChatCompletion({
         model: "gpt-3.5-turbo",
         messages: [
-          {
-            role: "system",
-            content: "You are an SEO expert. Analyze the content of the given URL, accurately reflects the page content, and encourages clicks."
-          },
-          {
-            role: "user",
-            content: `URL: ${url}`
-          }          
-        ]
-      }, {
-        headers: {
-          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        timeout: 50000 // 50 seconds timeout
+          { role: "system", content: "You are an SEO expert. Analyze the content of the given URL." },
+          { role: "user", content: `Analyze this URL: ${url}` }
+        ],
       });
- 
-      console.log(`OpenAI API call completed in ${Date.now() - startTime}ms`);
-      const analysis = openaiResponse.data.choices[0].message.content;
-      return res.status(200).json({ analysis });
+
+      return res.status(200).json({ analysis: completion.data.choices[0].message.content });
     } catch (error) {
-      console.error('Error occurred:', error);
-      return res.status(500).json({ 
-        error: 'An error occurred while processing your request', 
-        details: error.message
-      });
+      console.error('Error:', error);
+      return res.status(500).json({ error: 'An error occurred while processing your request' });
     }
   } else {
-    return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
-};
+}
