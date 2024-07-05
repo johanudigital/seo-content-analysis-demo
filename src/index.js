@@ -5,7 +5,7 @@ import SEOContentOutlineTool from './seo-content-outline-tool';
 import './index.css';
 
 ReactDOM.render(
-  <Router basename={process.env.PUBLIC_URL}>
+  <Router>
     <SEOContentOutlineTool />
   </Router>,
   document.getElementById('root')
